@@ -1,0 +1,4 @@
+@import "tailwindcss";
+
+/* vscode-css-disable */
+@custom-variant dark (&:where(.dark, .dark *));

@@ -1,0 +1,25 @@
+node_modules/
+.next/
+.vercel/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+.agent/
+# Antigravity/Gemini rule file
+GEMINI.md
+.ecc/
+.eclipserc.yaml
+ECC/
+
+# Agent rules and configuration files
+GEMINI.md
+.clinerules*
+.cursorrules*
+.agent*
+.agents*
+AGENTS.md
+ECC/
+scratch/
+.env
