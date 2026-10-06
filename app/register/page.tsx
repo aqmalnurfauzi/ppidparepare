@@ -33,14 +33,14 @@ export default function RegisterPage() {
       <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-200 dark:bg-emerald-900/40 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-30 dark:opacity-20 translate-x-1/2 -translate-y-1/2"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-200 dark:bg-teal-900/40 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-30 dark:opacity-20 -translate-x-1/2 translate-y-1/2"></div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full max-w-md relative z-10"
       >
         <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden">
-          
+
           <div className="bg-emerald-600 dark:bg-slate-800/80 p-8 text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-emerald-700 dark:from-slate-800 dark:to-slate-900 opacity-90"></div>
             <div className="relative z-10">
@@ -54,7 +54,7 @@ export default function RegisterPage() {
 
           <div className="p-8">
             {error && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-xl flex items-start gap-3"
@@ -65,7 +65,7 @@ export default function RegisterPage() {
             )}
 
             {success && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/50 rounded-xl flex items-start gap-3"
@@ -119,10 +119,10 @@ export default function RegisterPage() {
                     type={showPassword ? "text" : "password"}
                     name="password"
                     required
-                    minLength={6}
+                    minLength={8}
                     autoComplete="new-password"
                     className="w-full pl-11 pr-12 py-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
-                    placeholder="Minimal 6 karakter"
+                    placeholder="Minimal 8 karakter"
                   />
                   <button
                     type="button"
