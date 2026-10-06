@@ -1,44 +1,99 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const SESSION_COOKIE_NAME = 'admin_session_token';
-
 export async function login(formData: FormData) {
-  const username = formData.get('username') as string;
+  const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
-  if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
-    return { error: 'Konfigurasi server bermasalah. Kredensial tidak ditemukan.' };
+  if (!email || !password) {
+    return { error: 'Email dan password wajib diisi.' };
   }
 
-  // Artificial delay to prevent timing and basic brute-force attacks
-  await new Promise(resolve => setTimeout(resolve, 800));
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-    // Generate a simple token (in production, use a secure signed JWT)
-    const token = Buffer.from(`${username}:${Date.now()}`).toString('base64');
-    
-    const cookieStore = await cookies();
-    cookieStore.set(SESSION_COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/',
-      maxAge: 60 * 60 * 24, // 1 day
-    });
-
-    redirect('/dashboard');
+  if (error) {
+    return { error: 'Email atau password salah!' };
   }
 
-  return { error: 'Username atau Password salah!' };
+  // Next.js middleware handles routing if they are admin vs user, 
+  // but we can redirect safely to /dashboard or /profil. Middleware will adjust if needed.
+  redirect('/dashboard');
+}
+
+export async function register(formData: FormData) {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  const fullName = formData.get('full_name') as string;
+
+  if (!email || !password || !fullName) {
+    return { error: 'Semua kolom wajib diisi.' };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+      },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/callback`,
+    }
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: 'Registrasi berhasil. Silakan cek email Anda untuk verifikasi.' };
 }
 
 export async function logout() {
-  const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE_NAME);
+  const supabase = await createClient();
+  await supabase.auth.signOut();
   redirect('/login');
+}
+
+export async function requestPasswordReset(formData: FormData) {
+  const email = formData.get('email') as string;
+  
+  if (!email) {
+    return { error: 'Email wajib diisi.' };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/callback?next=/reset-password`,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: 'Tautan reset password telah dikirim ke email Anda.' };
+}
+
+export async function updatePassword(formData: FormData) {
+  const newPassword = formData.get('password') as string;
+  
+  if (!newPassword || newPassword.length < 6) {
+    return { error: 'Password baru minimal 6 karakter.' };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  redirect('/login?message=password_updated');
 }

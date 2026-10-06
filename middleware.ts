@@ -1,25 +1,19 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { type NextRequest } from 'next/server';
+import { updateSession } from './lib/supabase/middleware';
 
-export function middleware(request: NextRequest) {
-  const sessionToken = request.cookies.get('admin_session_token');
-  const { pathname } = request.nextUrl;
-
-  // Protect /dashboard routes
-  if (pathname.startsWith('/dashboard')) {
-    if (!sessionToken) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-  }
-
-  // Prevent logged-in users from accessing /login
-  if (pathname === '/login' && sessionToken) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
-  return NextResponse.next();
+export async function middleware(request: NextRequest) {
+  return await updateSession(request);
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - images / svg public assets (png, jpg, jpeg, svg, gif, webp)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 };
