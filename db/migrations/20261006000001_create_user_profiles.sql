@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
   full_name TEXT,
   phone_number TEXT,
   address TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT pg_catalog.now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT pg_catalog.now()
 );
 
 -- Index for role and active status
@@ -21,10 +21,10 @@ CREATE INDEX IF NOT EXISTS idx_user_profiles_is_active ON public.user_profiles(i
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.updated_at = NOW();
+  NEW.updated_at = pg_catalog.now();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, pg_temp;
 
 DROP TRIGGER IF EXISTS on_user_profiles_updated ON public.user_profiles;
 CREATE TRIGGER on_user_profiles_updated
@@ -43,13 +43,13 @@ BEGIN
     'user',
     true,
     COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
-    NOW(),
-    NOW()
+    pg_catalog.now(),
+    pg_catalog.now()
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, pg_temp;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
@@ -57,14 +57,15 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
 
--- 4. Guard against unauthorized privilege escalation (role & is_active modification)
+-- 4. Guard against unauthorized privilege escalation, self-demotion, self-deactivation, and last-admin removal
 CREATE OR REPLACE FUNCTION public.guard_user_profile_updates()
 RETURNS TRIGGER AS $$
 DECLARE
   v_caller_role TEXT;
   v_caller_is_admin BOOLEAN := false;
+  v_active_admin_count INT;
 BEGIN
-  -- Prevent changing id or created_at
+  -- Prevent changing immutable columns: id or created_at
   IF NEW.id <> OLD.id THEN
     RAISE EXCEPTION 'ID cannot be modified.';
   END IF;
@@ -99,11 +100,22 @@ BEGIN
     IF auth.uid() = OLD.id AND (NEW.role <> 'admin' OR NEW.is_active = false) THEN
       RAISE EXCEPTION 'Admins cannot demote or deactivate their own account.';
     END IF;
+
+    -- Last-active-admin protection: If demoting or deactivating an admin, ensure at least one other active admin remains
+    IF OLD.role = 'admin' AND OLD.is_active = true AND (NEW.role <> 'admin' OR NEW.is_active = false) THEN
+      SELECT COUNT(*) INTO v_active_admin_count
+      FROM public.user_profiles
+      WHERE role = 'admin' AND is_active = true AND id <> OLD.id;
+
+      IF v_active_admin_count = 0 THEN
+        RAISE EXCEPTION 'Cannot demote or deactivate the last active administrator.';
+      END IF;
+    END IF;
   END IF;
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, pg_temp;
 
 DROP TRIGGER IF EXISTS trg_guard_user_profile_updates ON public.user_profiles;
 CREATE TRIGGER trg_guard_user_profile_updates
@@ -123,9 +135,9 @@ BEGIN
     WHERE id = auth.uid() AND role = 'admin' AND is_active = true
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, pg_temp;
 
--- SELECT: Users can read own profile; Admins can read all profiles
+-- SELECT: Users can read own profile; Admins can read all profiles (prevents IDOR)
 DROP POLICY IF EXISTS "Users can read own profile or admin can read all" ON public.user_profiles;
 CREATE POLICY "Users can read own profile or admin can read all"
   ON public.user_profiles
@@ -134,14 +146,14 @@ CREATE POLICY "Users can read own profile or admin can read all"
     auth.uid() = id OR public.is_admin()
   );
 
--- INSERT: Prevent manual direct insert; only trigger (SECURITY DEFINER) or service_role can insert
+-- INSERT: Prevent manual direct insert from client; only trigger (SECURITY DEFINER) or service_role can insert
 DROP POLICY IF EXISTS "Disallow direct manual profile insert" ON public.user_profiles;
 CREATE POLICY "Disallow direct manual profile insert"
   ON public.user_profiles
   FOR INSERT
   WITH CHECK (false);
 
--- UPDATE: Users can update own profile (field guards handled by trigger); Admins can update profiles
+-- UPDATE: Users can update own profile (role/is_active protected by trigger); Admins can update profiles
 DROP POLICY IF EXISTS "Users can update own profile or admin can update" ON public.user_profiles;
 CREATE POLICY "Users can update own profile or admin can update"
   ON public.user_profiles
