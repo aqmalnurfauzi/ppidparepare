@@ -33,7 +33,6 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         <ThemeProvider>
           {children}
           <ChatWidget />
-          <div style={{position:'fixed',bottom:0,left:0,zIndex:9999,background:'red',color:'white'}}>TES</div> {/* BARU */}
         </ThemeProvider>
       </body>
     </html>
