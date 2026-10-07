@@ -1,24 +1,31 @@
-import { describe, it } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
+import {
+  serviceClient,
+  newAnonClient,
+  requireStaging,
+  createConfirmedUser,
+  cleanupTestUsers,
+  isNotMigrated,
+} from './helpers/gate-a-staging.mjs';
 
-// Read .env.local
-let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-let anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-let serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-
-if (fs.existsSync('.env.local')) {
-  const envContent = fs.readFileSync('.env.local', 'utf-8');
-  supabaseUrl = supabaseUrl || envContent.match(/NEXT_PUBLIC_SUPABASE_URL=(.*)/)?.[1]?.trim() || '';
-  anonKey = anonKey || envContent.match(/NEXT_PUBLIC_SUPABASE_ANON_KEY=(.*)/)?.[1]?.trim() || '';
-  serviceKey = serviceKey || envContent.match(/SUPABASE_SERVICE_ROLE_KEY=(.*)/)?.[1]?.trim() || '';
-}
-
-const adminClient = (supabaseUrl && serviceKey) ? createClient(supabaseUrl, serviceKey) : null;
-const anonClient = (supabaseUrl && anonKey) ? createClient(supabaseUrl, anonKey) : null;
+// service_role client: used here ONLY for constraint/FK fixtures and inspection.
+const adminClient = serviceClient;
+const anonClient = serviceClient ? newAnonClient() : null;
 
 describe('Phase 2 Gate A — Database Foundation Verifications', () => {
+  // Real, email-confirmed pemohon so FK on pemohon_id is satisfied.
+  let pemohon: Awaited<ReturnType<typeof createConfirmedUser>> | null = null;
+
+  before(async () => {
+    if (serviceClient) pemohon = await createConfirmedUser('user');
+  });
+
+  after(async () => {
+    await cleanupTestUsers();
+  });
+
   it('STATIC: Migration SQL file contains required DDL and constraints', () => {
     const sql = fs.readFileSync('db/migrations/20261006000002_phase2_database_foundation.sql', 'utf-8');
     
@@ -43,43 +50,52 @@ describe('Phase 2 Gate A — Database Foundation Verifications', () => {
   });
 
   it('DB-01: Dua transaksi concurrent meminta nomor pada tahun yang sama tidak boleh duplicate', async (t) => {
-    if (!adminClient) return t.skip('Supabase staging credentials not configured');
-    
-    const year = 2026;
-    const promises = [
-      adminClient.rpc('allocate_nomor_permohonan', { p_year: year }),
-      adminClient.rpc('allocate_nomor_permohonan', { p_year: year })
-    ];
+    if (!pemohon) return requireStaging(t, 'Supabase staging credentials not configured');
 
-    const results = await Promise.all(promises);
-    if (results[0].error && results[0].error.code === 'PGRST202') {
-      return t.skip('Table/Function allocate_nomor_permohonan not yet migrated to staging DB (PGRST202)');
-    }
+    // Allocation is only reachable through the authorized create_permohonan() RPC.
+    const N = 5;
+    const results = await Promise.all(
+      Array.from({ length: N }, (_, i) =>
+        pemohon!.client.rpc('create_permohonan', { p_nama_pemohon: `Concurrent ${i}`, p_kebutuhan: 'DB-01' })
+      )
+    );
+    if (isNotMigrated(results[0].error)) return requireStaging(t, 'create_permohonan not migrated (PGRST202)');
 
-    assert.equal(results[0].error, null, `RPC 1 error: ${results[0].error?.message}`);
-    assert.equal(results[1].error, null, `RPC 2 error: ${results[1].error?.message}`);
-    assert.notEqual(results[0].data, results[1].data, 'Nomor permohonan duplicate under concurrent allocation!');
-    assert.match(results[0].data, /^PPID-2026-\d{5}$/);
-    assert.match(results[1].data, /^PPID-2026-\d{5}$/);
+    for (const r of results) assert.equal(r.error, null, `RPC error: ${r.error?.message}`);
+    const nomors = results.map((r) => (r.data as { nomor_permohonan: string }[])[0].nomor_permohonan);
+    assert.equal(new Set(nomors).size, N, `Duplicate nomor under concurrency: ${nomors.join(',')}`);
+    for (const n of nomors) assert.match(n, /^PPID-\d{4}-\d{5}$/);
   });
 
   it('DB-02: Tahun berbeda menghasilkan counter terisolasi', async (t) => {
-    if (!adminClient) return t.skip('Supabase staging credentials not configured');
+    if (!pemohon || !adminClient) return requireStaging(t, 'Supabase staging credentials not configured');
 
-    const res2025 = await adminClient.rpc('allocate_nomor_permohonan', { p_year: 2025 });
-    if (res2025.error && res2025.error.code === 'PGRST202') {
-      return t.skip('Table/Function allocate_nomor_permohonan not yet migrated to staging DB');
-    }
+    // Seed an isolated far-future year; allocating for the current year must not touch it.
+    const isolatedYear = 2099;
+    const seed = await adminClient.from('permohonan_counter')
+      .upsert({ year: isolatedYear, nilai_terakhir: 41 }, { onConflict: 'year' });
+    if (isNotMigrated(seed.error)) return requireStaging(t, 'permohonan_counter not migrated');
+    assert.equal(seed.error, null, seed.error?.message);
 
-    assert.equal(res2025.error, null);
-    assert.match(res2025.data, /^PPID-2025-\d{5}$/);
+    const res = await pemohon.client.rpc('create_permohonan', { p_nama_pemohon: 'Year iso', p_kebutuhan: 'DB-02' });
+    assert.equal(res.error, null, res.error?.message);
+    const nomor = (res.data as { nomor_permohonan: string }[])[0].nomor_permohonan;
+    const year = Number(nomor.slice(5, 9));
+    assert.notEqual(year, isolatedYear);
+
+    const iso = await adminClient.from('permohonan_counter').select('nilai_terakhir').eq('year', isolatedYear).single();
+    const cur = await adminClient.from('permohonan_counter').select('nilai_terakhir').eq('year', year).single();
+    assert.equal(iso.data!.nilai_terakhir, 41, 'isolated year counter was modified');
+    assert.equal(cur.data!.nilai_terakhir, Number(nomor.slice(10)), 'current-year counter does not match issued nomor');
+
+    await adminClient.from('permohonan_counter').delete().eq('year', isolatedYear);
   });
 
   it('DB-03: Nomor permohonan unique', async (t) => {
-    if (!adminClient) return t.skip('Supabase staging credentials not configured');
+    if (!adminClient || !pemohon) return requireStaging(t, 'Supabase staging credentials not configured');
 
     // Attempting to insert two records with duplicate nomor_permohonan
-    const fakeUserId = '7e2ff638-7eef-4d92-9b46-50ceb6fac77b';
+    const fakeUserId = pemohon.id;
     const testNomor = 'PPID-2026-TESTUQ';
 
     const insert1 = await adminClient.from('permohonan').insert({
@@ -233,12 +249,15 @@ describe('Phase 2 Gate A — Database Foundation Verifications', () => {
     assert.match(res.error.message.toLowerCase(), /foreign key|violates foreign key constraint/);
   });
 
-  it('DB-10: user biasa/anon tidak dapat menjalankan privileged counter operation secara langsung', async (t) => {
-    if (!anonClient) return t.skip('Anon client not configured');
+  it('DB-10: anon / user / service_role tidak dapat menjalankan privileged counter operation secara langsung', async (t) => {
+    if (!anonClient || !adminClient || !pemohon) return requireStaging(t, 'Supabase staging credentials not configured');
 
-    const res = await anonClient.rpc('allocate_nomor_permohonan', { p_year: 2026 });
-    // Should be permission denied (401/403/42501) or function not found for anon
-    assert.ok(res.error !== null, 'Anon client was able to allocate nomor permohonan!');
-    // If not migrated yet, it returns PGRST202 or PGRST301
+    for (const [label, client] of [['anon', anonClient], ['authenticated', pemohon.client], ['service_role', adminClient]] as const) {
+      const res = await client.rpc('allocate_nomor_permohonan', { p_year: 2026 });
+      assert.ok(res.error !== null, `${label} was able to call allocate_nomor_permohonan directly!`);
+    }
+    // Counter table is not client-readable/writable.
+    const read = await pemohon.client.from('permohonan_counter').select('*');
+    assert.ok(read.error !== null || (read.data ?? []).length === 0, 'authenticated can read counter');
   });
 });
