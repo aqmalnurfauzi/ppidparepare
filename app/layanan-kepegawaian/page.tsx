@@ -150,6 +150,14 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         deskripsi: 'Formulir resmi permohonan izin cuti (Tahunan, Sakit, Alasan Penting, Melahirkan, dan Besar) sesuai Peraturan BKN No. 24/2017 & No. 7/2021.',
         labelPanduan: 'Unduh Format Blanko Cuti (Google Drive)',
         urlPanduan: 'https://drive.google.com/drive/folders/1UAdx1xtEzcZTqmQjGynzlVS9VwOmM6If'
+      },
+      {
+        kodeLayanan: 'C.5',
+        nama: 'Format Surat Keterangan Lupa Absen (PNS & PPPK)',
+        sasaran: 'PNS & PPPK',
+        deskripsi: 'Template resmi surat pertanggungjawaban bukti kehadiran bagi pegawai atau guru madrasah yang mengalami lupa absen atau kendala teknis pada aplikasi presensi elektronik (Pusaka/Presensi Online) untuk disahkan atasan langsung.',
+        labelPanduan: 'Unduh Format Surat Lupa Absen (Google Drive)',
+        urlPanduan: 'https://docs.google.com/document/d/1DEoWj5mDrTXZhgjAkwdPH5Tg03TyLhij/edit?usp=sharing&ouid=112206925890698995511&rtpof=true&sd=true'
       }
     ]
   }
@@ -161,8 +169,9 @@ export default function LayananKepegawaianPage() {
       <Navbar />
 
       <div className="flex-1">
-        <header className="bg-gradient-to-r from-[#005a2b] via-[#046a38] to-[#077039] text-white shadow-md">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 border-b border-emerald-700/60 flex flex-wrap items-center justify-between text-xs text-emerald-100 gap-2">
+       <header className="bg-gradient-to-r from-[#004d25] via-[#005a2b] to-[#046a38] text-white shadow-md border-b-2 border-emerald-800">
+          {/* Baris Identitas Satker */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 border-b border-emerald-700/50 flex flex-wrap items-center justify-between text-xs text-emerald-100 gap-2">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-white tracking-wider uppercase">
                 Kementerian Agama Republik Indonesia
@@ -172,17 +181,29 @@ export default function LayananKepegawaianPage() {
             </div>
             <div className="flex items-center gap-4 text-[11px] text-emerald-200">
               <span className="flex items-center gap-1.5">
-                <span className="inline-block w-2 h-2 rounded-full bg-emerald-300"></span>
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
                 Subbagian Tata Usaha
               </span>
-              <span>Jam Layanan: 08.00 - 16.00 WITA</span>
+              <span>Jam Layanan: 08.00 - 15.00 WITA</span>
             </div>
           </div>
+
+          {/* Banner Judul Resmi */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <nav className="flex items-center gap-2 text-xs text-emerald-200 mb-4" aria-label="Breadcrumb">
+              <Link href="/" className="hover:text-white transition-colors">
+                Beranda
+              </Link>
+              <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+              <span className="text-white font-medium">Layanan Kepegawaian</span>
+            </nav>
+
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
-                <span className="inline-block px-3 py-1 text-[11px] font-bold tracking-wider uppercase rounded-full bg-emerald-950/60 border border-emerald-400/40 text-emerald-200 mb-3 backdrop-blur-xs">
-                  SILAKAN - Sistem Informasi Layanan Administrasi Kepegawaian
+                <span className="inline-block px-3 py-1 text-[11px] font-bold tracking-wider uppercase rounded-full bg-emerald-950/70 border border-emerald-400/30 text-emerald-200 mb-3">
+                  Layanan Kepegawaian Ramah dan Cepat 
                 </span>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
                   Katalog Layanan Administrasi Kepegawaian
@@ -192,6 +213,7 @@ export default function LayananKepegawaianPage() {
                 </p>
               </div>
 
+              {/* Box Info Bebas Biaya */}
               <div className="shrink-0 bg-white text-slate-800 border border-emerald-200 rounded-xl p-4 text-xs max-w-xs shadow-lg">
                 <div className="font-bold text-[#005a2b] flex items-center gap-1.5 mb-1.5 text-[12px]">
                   <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,6 +228,48 @@ export default function LayananKepegawaianPage() {
             </div>
           </div>
         </header>
+
+        <section className="bg-white border-b border-slate-200 py-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-slate-700">
+              <div className="flex items-start gap-3 p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                <span className="w-6 h-6 rounded-full bg-[#005a2b] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                  1
+                </span>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900">Pelajari Syarat Panduan</h4>
+                  <p className="text-[11.5px] text-slate-500 mt-0.5">
+                    Unduh file PDF panduan dan format berkas resmi melalui tombol Google Drive.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                <span className="w-6 h-6 rounded-full bg-[#005a2b] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                  2
+                </span>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900">Lengkapi Dokumen Valid</h4>
+                  <p className="text-[11.5px] text-slate-500 mt-0.5">
+                    Siapkan dokumen scan asli bertandatangan atasan (Kamad / Kepala KUA / Kasi).
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                <span className="w-6 h-6 rounded-full bg-[#005a2b] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                  3
+                </span>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900">Kirim Berkas Daring</h4>
+                  <p className="text-[11.5px] text-slate-500 mt-0.5">
+                    Isi data dan unggah berkas melalui Google Form resmi Subbag TU Kemenag Parepare.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
           {DATA_LAYANAN_KEMENAG.map((kelompok) => (
