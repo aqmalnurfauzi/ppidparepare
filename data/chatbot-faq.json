@@ -1,0 +1,260 @@
+[
+  {
+    "id": 1,
+    "kategori": "Prosedur PPID",
+    "pertanyaan_variasi": [
+      "apa syarat permohonan informasi publik",
+      "bagaimana syarat minta data di ppid kemenag",
+      "dokumen apa yang dibutuhkan untuk ajukan informasi publik",
+      "persyaratan permohonan informasi",
+      "bagaimana cara meminta data informasi di kemenag parepare",
+      "syarat minta data dokumen ppid"
+    ],
+    "jawaban_variasi": [
+      "Persyaratan permohonan informasi publik di PPID Kemenag:\n• Melampirkan identitas diri yang sah (fotokopi/scan KTP pemohon, atau akta pendirian/surat kuasa bagi lembaga/LSM)\n• Mengisi Formulir Permohonan Informasi Publik (tersedia di meja layanan atau portal daring)\n• Mencantumkan rincian informasi publik yang dibutuhkan secara spesifik\n• Mencantumkan tujuan penggunaan informasi secara jelas dan dapat dipertanggungjawabkan",
+      "Dokumen syarat permohonan data PPID:\n1. Salinan KTP pemohon yang masih berlaku\n2. Formulir resmi permohonan informasi publik yang sudah diisi lengkap\n3. Surat kuasa resmi jika permohonan mewakili organisasi/badan hukum\n4. Keterangan tujuan peruntukan data secara tertulis"
+    ]
+  },
+  {
+    "id": 2,
+    "kategori": "Waktu & Biaya PPID",
+    "pertanyaan_variasi": [
+      "berapa lama jangka waktu permohonan informasi diproses",
+      "kapan permohonan informasi saya dijawab",
+      "waktu pelayanan informasi ppid",
+      "berapa hari ppid memproses data pemohon",
+      "jangka waktu tanggapan informasi"
+    ],
+    "jawaban_variasi": [
+      "Standar waktu pelayanan informasi sesuai UU KIP No. 14 Tahun 2008:\n1. Tanggapan tertulis diberikan paling lambat 10 (sepuluh) hari kerja sejak permohonan dinyatakan lengkap.\n2. Waktu proses dapat diperpanjang maksimal 7 (tujuh) hari kerja berikutnya dengan pemberitahuan tertulis jika memerlukan penelusuran dokumen mendalam.",
+      "Ketentuan durasi proses permohonan informasi publik:\n• Jawaban/keputusan awal: maksimal 10 hari kerja.\n• Tambahan perpanjangan resmi: maksimal 7 hari kerja (disertai surat alasan resmi dari Atasan PPID)."
+    ]
+  },
+  {
+    "id": 3,
+    "kategori": "Waktu & Biaya PPID",
+    "pertanyaan_variasi": [
+      "berapa biaya layanan permohonan informasi",
+      "apakah minta data ppid berbayar",
+      "tarif layanan informasi publik kemenag",
+      "berapa biaya fotokopi berkas informasi",
+      "ongkos pengurusan data ppid"
+    ],
+    "jawaban_variasi": [
+      "Ketentuan biaya pelayanan PPID Kementerian Agama:\n• Pelayanan dan permohonan informasi publik adalah Rp0 (Gratis).\n• Pengiriman dokumen dalam format digital/softcopy via email tidak dipungut biaya apa pun.\n• Biaya penggandaan berkas fisik (fotokopi) atau penyediaan flashdisk ditanggung sendiri oleh pemohon.",
+      "Layanan informasi di PPID Kemenag Parepare bebas biaya (gratis). Pemohon hanya bertanggung jawab mandiri atas biaya penggandaan fisik jika membutuhkan salinan berkas cetak."
+    ]
+  },
+  {
+    "id": 4,
+    "kategori": "Keberatan & Sengketa PPID",
+    "pertanyaan_variasi": [
+      "bagaimana cara mengajukan keberatan informasi",
+      "prosedur pengajuan keberatan ppid",
+      "saya tidak puas dengan jawaban ppid kemenag",
+      "alur sengketa informasi publik di kemenag",
+      "cara sengketa informasi ke komisi informasi"
+    ],
+    "jawaban_variasi": [
+      "Tahapan pengajuan keberatan layanan informasi:\n1. Pemohon mengajukan Surat Keberatan tertulis kepada Atasan PPID maksimal 30 hari kerja setelah tanggapan diterima atau batas waktu terlampaui.\n2. Atasan PPID wajib memberikan tanggapan resmi maksimal 30 hari kerja sejak keberatan diterima.\n3. Jika pemohon belum puas atas tanggapan Atasan PPID, pemohon dapat mengajukan Sengketa Informasi ke Komisi Informasi dalam jangka waktu 14 hari kerja."
+    ]
+  },
+  {
+    "id": 5,
+    "kategori": "Klasifikasi Informasi",
+    "pertanyaan_variasi": [
+      "apa saja informasi yang dikecualikan di kemenag",
+      "informasi apa yang tidak boleh diminta di ppid",
+      "apakah semua data kementerian agama boleh diminta masyarakat",
+      "data rahasia kemenag"
+    ],
+    "jawaban_variasi": [
+      "Klasifikasi Informasi yang Dikecualikan (tidak dapat diakses publik):\n• Berkas yang berkaitan langsung dengan proses penegakan hukum yang sedang berjalan\n• Data pribadi/privasi pegawai (seperti rekam medis, nomor rekening pribadi, dokumen keluarga)\n• Rahasia jabatan dan rahasia negara sesuai undang-undang\n• Dokumen yang masih berupa draf kerja atau belum diputuskan secara final"
+    ]
+  },
+  {
+    "id": 6,
+    "kategori": "Layanan KUA & Pernikahan",
+    "pertanyaan_variasi": [
+      "bagaimana persyaratan menikah",
+      "apa saja syarat nikah di kua",
+      "dokumen apa yang harus disiapkan untuk daftar nikah",
+      "cara pendaftaran nikah di kemenag parepare",
+      "syarat berkas kawin",
+      "berkas daftar nikah"
+    ],
+    "jawaban_variasi": [
+      "Persyaratan pendaftaran nikah di Kantor KUA:\n1. Surat pengantar nikah dari kelurahan setempat (Formulir N1 - N4)\n2. Fotokopi KTP, Kartu Keluarga (KK), dan Akta Kelahiran calon pengantin serta orang tua\n3. Pas foto berlatar biru ukuran 2x3 (4 lembar) dan 4x6 (2 lembar)\n4. Surat rekomendasi nikah dari KUA asal (jika akad nikah di luar kecamatan domisili)\n5. Surat persetujuan calon mempelai dan izin komandan bagi anggota TNI/Polri\n\nCatatan: Berkas diserahkan minimal 10 hari kerja sebelum jadwal akad nikah."
+    ]
+  },
+  {
+    "id": 7,
+    "kategori": "Layanan KUA & Pernikahan",
+    "pertanyaan_variasi": [
+      "berapa biaya nikah di kua",
+      "apakah menikah di kua bayar",
+      "tarif nikah di luar kantor kua",
+      "biaya nikah resmi kemenag",
+      "ongkos penghulu nikah",
+      "budget nikah"
+    ],
+    "jawaban_variasi": [
+      "Ketentuan tarif nikah resmi (PP No. 48/2014 & PP No. 59/2018):\n• Akad nikah di Kantor KUA pada hari dan jam dinas: Rp0 (Gratis)\n• Akad nikah di luar Kantor KUA atau di luar jam kerja: Rp600.000\n\nPembayaran biaya nikah di luar kantor disetor langsung ke kas negara melalui bank persepsi (bukan tunai ke penghulu/petugas)."
+    ]
+  },
+  {
+    "id": 8,
+    "kategori": "Layanan KUA & Pernikahan",
+    "pertanyaan_variasi": [
+      "bagaimana syarat numpang nikah",
+      "surat rekomendasi nikah luar daerah",
+      "cara minta surat rekomendasi nikah di kua",
+      "syarat numpang nikah di kota parepare"
+    ],
+    "jawaban_variasi": [
+      "Syarat rekomendasi/numpang nikah ke kecamatan/kota lain:\n1. Surat pengantar nikah dari kelurahan domisili asal\n2. Fotokopi KTP, Kartu Keluarga, dan Akta Kelahiran pemohon\n3. Surat pengantar dari KUA kecamatan asal yang ditujukan ke KUA kecamatan tujuan\n4. Membawa fotokopi KTP calon pasangan"
+    ]
+  },
+  {
+    "id": 9,
+    "kategori": "Layanan KUA & Pernikahan",
+    "pertanyaan_variasi": [
+      "bagaimana cara mengurus buku nikah yang hilang atau rusak",
+      "syarat duplikat buku nikah",
+      "buku nikah hilang",
+      "ganti buku nikah rusak"
+    ],
+    "jawaban_variasi": [
+      "Persyaratan penerbitan Duplikat Buku Nikah di KUA tempat menikah:\n• Buku Nikah Hilang: Surat Keterangan Kehilangan dari Kepolisian (Polsek setempat), fotokopi KTP/KK, dan pas foto 2x3 latar biru.\n• Buku Nikah Rusak: Membawa fisik Buku Nikah yang rusak, fotokopi KTP/KK, dan pas foto 2x3 latar biru.\nPenerbitan duplikat buku nikah tidak dipungut biaya (Gratis)."
+    ]
+  },
+  {
+    "id": 10,
+    "kategori": "Layanan KUA & Kemasjidan",
+    "pertanyaan_variasi": [
+      "bagaimana cara mengajukan pengukuran arah kiblat",
+      "syarat kalibrasi arah kiblat masjid",
+      "cara minta ukur arah kiblat mushalla di parepare",
+      "pengukuran arah kiblat kemenag"
+    ],
+    "jawaban_variasi": [
+      "Prosedur permohonan pengukuran arah kiblat di Kemenag Parepare:\n1. Pengurus masjid/mushalla atau perorangan membuat Surat Permohonan resmi yang ditujukan kepada Kepala Kantor Kemenag Kota Parepare (c.q. Seksi Bimas Islam).\n2. Cantumkan nama masjid/mushalla, alamat lengkap/titik lokasi, dan nomor kontak pengurus.\n3. Tim Hisab Rukyat Kemenag akan turun langsung ke lokasi untuk melakukan pengukuran dan menerbitkan Sertifikat Arah Kiblat resmi (Gratis)."
+    ]
+  },
+  {
+    "id": 11,
+    "kategori": "Layanan Haji & Umrah",
+    "pertanyaan_variasi": [
+      "bagaimana cara daftar haji reguler",
+      "apa syarat pendaftaran haji di kemenag",
+      "alur pendaftaran porsi haji kemenag parepare",
+      "syarat buka porsi haji",
+      "dokumen daftar haji"
+    ],
+    "jawaban_variasi": [
+      "Tahapan pendaftaran porsi haji reguler:\n1. Buka rekening tabungan haji pada Bank Penerima Setoran (BPS-BPIH) dan setorkan setoran awal sebesar Rp25.000.000 untuk mendapatkan bukti validasi bank.\n2. Bawa berkas ke Seksi Penyelenggaraan Haji dan Umrah (PHU) Kantor Kemenag Parepare:\n   • Salinan KTP, Kartu Keluarga, Akta Kelahiran/Buku Nikah/Ijazah\n   • Surat Keterangan Domisili (jika alamat KTP berbeda)\n   • Pas foto haji terbaru\n3. Petugas melakukan verifikasi, foto biometrik, dan perekaman sidik jari untuk mencetak lembar SPPH yang memuat Nomor Porsi resmi."
+    ]
+  },
+  {
+    "id": 12,
+    "kategori": "Layanan Haji & Umrah",
+    "pertanyaan_variasi": [
+      "bagaimana syarat pelimpahan nomor porsi haji",
+      "pelimpahan porsi haji karena meninggal",
+      "syarat ganti nomor porsi haji yang sakit permanen",
+      "waris porsi haji"
+    ],
+    "jawaban_variasi": [
+      "Syarat pelimpahan nomor porsi haji (karena wafat atau sakit permanen):\n• Surat permohonan pelimpahan porsi bermaterai dari calon penerima pelimpahan\n• Akta Kematian dari Disdukcapil (jika wafat) atau Surat Keterangan Sakit Permanen dari Rumah Sakit Pemerintah\n• Surat Kuasa Penunjukan bermaterai yang ditandatangani oleh seluruh ahli waris sah\n• Salinan KTP, KK, Akta Lahir/Buku Nikah penerima pelimpahan (harus suami/istri/anak kandung/saudara kandung)\n• Bukti Asli Setoran Awal BPIH dan lembar SPPH asli almarhum"
+    ]
+  },
+  {
+    "id": 13,
+    "kategori": "Layanan Haji & Umrah",
+    "pertanyaan_variasi": [
+      "bagaimana syarat rekomendasi paspor umrah dan haji",
+      "minta surat rekomendasi paspor umroh",
+      "syarat rekomendasi paspor kemenag"
+    ],
+    "jawaban_variasi": [
+      "Syarat permohonan surat rekomendasi paspor haji/umrah di Seksi PHU:\n1. Surat permohonan dan surat rekomendasi resmi dari Travel/PPIU (Penyelenggara Perjalanan Ibadah Umrah) yang berizin resmi Kemenag\n2. Salinan izin operasional PPIU/travel yang masih berlaku\n3. Fotokopi KTP dan Kartu Keluarga calon jamaah\n4. Surat pernyataan calon jamaah bermaterai"
+    ]
+  },
+  {
+    "id": 14,
+    "kategori": "Pendidikan Madrasah",
+    "pertanyaan_variasi": [
+      "bagaimana syarat legalisir ijazah madrasah",
+      "cara legalisir ijazah ra mi mts ma di kemenag",
+      "syarat pengesahan ijazah madrasah kemenag parepare",
+      "legalisir ijazah pesantren"
+    ],
+    "jawaban_variasi": [
+      "Persyaratan legalisir ijazah madrasah (RA/MI/MTs/MA) di Seksi Pendidikan Madrasah:\n1. Membawa Ijazah Asli dan Transkrip Nilai Asli\n2. Membawa fotokopi ijazah yang akan dilegalisir (maksimal 5-10 lembar)\n3. Fotokopi KTP pemilik ijazah\nCatatan: Jika madrasah asal masih beroperasi, legalisir dilakukan langsung di madrasah bersangkutan. Legalisir di Kantor Kemenag dilakukan jika madrasah asal sudah tutup/merger atau bagi ijazah pondok pesantren salafiyah."
+    ]
+  },
+  {
+    "id": 15,
+    "kategori": "Pendidikan Madrasah",
+    "pertanyaan_variasi": [
+      "bagaimana mengurus ijazah madrasah yang hilang atau rusak",
+      "syarat surat keterangan pengganti ijazah skpi kemenag",
+      "ijazah mi mts ma hilang"
+    ],
+    "jawaban_variasi": [
+      "Persyaratan penerbitan Surat Keterangan Pengganti Ijazah (SKPI) di Kemenag:\n1. Surat Keterangan Kehilangan Ijazah dari Kepolisian (Polsek/Polres)\n2. Surat Pernyataan Tanggung Jawab Mutlak (SPTJM) bermaterai\n3. Fotokopi ijazah yang hilang (jika ada) atau buku induk madrasah\n4. Surat keterangan dari Kepala Madrasah yang bersangkutan\n5. Fotokopi KTP dan Akta Kelahiran pemohon"
+    ]
+  },
+  {
+    "id": 16,
+    "kategori": "Jaminan Produk Halal",
+    "pertanyaan_variasi": [
+      "bagaimana cara daftar sertifikasi halal gratis",
+      "syarat sertifikat halal gratis sehati sehati umkm",
+      "cara mengajukan sertifikasi halal di kemenag parepare",
+      "pendaftaran produk halal self declare"
+    ],
+    "jawaban_variasi": [
+      "Persyaratan Sertifikasi Halal Gratis (Program Sehati / Self-Declare BPJPH):\n1. Pelaku Usaha Mikro dan Kecil (UMK) dengan produk olahan sederhana dan tidak berisiko tinggi\n2. Memiliki Nomor Induk Berusaha (NIB) berbasis risiko\n3. Menggunakan bahan-bahan yang sudah dipastikan kehalalannya (bersertifikat halal atau bahan alami)\n4. Memiliki proses produksi yang bersih dan terpisah dari kontaminasi non-halal\n5. Pendaftaran dilakukan secara mandiri melalui portal ptsp.halal.go.id atau didampingi Pendamping Proses Produk Halal (PPH) di Kantor Kemenag."
+    ]
+  },
+  {
+    "id": 17,
+    "kategori": "Rumah Ibadah",
+    "pertanyaan_variasi": [
+      "bagaimana syarat rekomendasi pendirian rumah ibadah",
+      "surat rekomendasi pembangunan gereja masjid pura vihara",
+      "izin mendirikan rumah ibadah kemenag parepare"
+    ],
+    "jawaban_variasi": [
+      "Syarat rekomendasi pendirian rumah ibadah (PBM Menteri Agama & Mendagri No. 9 & 8 Tahun 2006):\n1. Daftar nama dan KTP pengguna rumah ibadah minimal 90 orang yang disahkan pejabat setempat\n2. Dukungan masyarakat setempat minimal 60 orang yang disahkan lurah/kepala desa\n3. Rekomendasi tertulis dari Forum Kerukunan Umat Beragama (FKUB) Kota Parepare\n4. Rekomendasi tertulis dari Kepala Kantor Kementerian Agama Kota Parepare"
+    ]
+  },
+  {
+    "id": 18,
+    "kategori": "Jam Operasional",
+    "pertanyaan_variasi": [
+      "kapan jam pelayanan ppid buka",
+      "jadwal buka kantor kemenag parepare",
+      "jam kerja pelayanan ppid kementerian agama",
+      "hari apa saja kantor kemenag buka",
+      "jam buka ptsp kemenag"
+    ],
+    "jawaban_variasi": [
+      "Jadwal operasional Meja Pelayanan Terpadu Satu Pintu (PTSP) & PPID Kemenag Kota Parepare:\n• Senin s.d. Kamis: Pukul 07.30 - 16.00 WITA (Istirahat pukul 12.00 - 13.30 WITA)\n• Jumat: Pukul 07.30 - 16.30 WITA (Istirahat pukul 11.30 - 13.30 WITA)\n• Sabtu, Minggu, & Libur Nasional: Tutup / Libur"
+    ]
+  },
+  {
+    "id": 19,
+    "kategori": "Saluran Pengaduan",
+    "pertanyaan_variasi": [
+      "bagaimana cara lapor pengaduan di kemenag parepare",
+      "nomor kontak pengaduan kemenag",
+      "layanan lapor pungli atau ketidakpuasan layanan",
+      "saluran aspirasi dan pengaduan masyarakat"
+    ],
+    "jawaban_variasi": [
+      "Saluran resmi pengaduan dan aspirasi Kemenag Kota Parepare:\n1. Portal Pengaduan Nasional: SP4N-LAPOR! (lapor.go.id)\n2. Whistleblowing System Kemenag RI: wbs.kemenag.go.id\n3. Kotak Saran & Pengaduan Fisik di Ruang PTSP Kantor Kemenag Kota Parepare, Jl. Jend. Sudirman No. 31, Parepare\n4. Layanan tatap muka langsung dengan Petugas Meja Informasi & Pengaduan pada jam kerja kedinasan."
+    ]
+  }
+]

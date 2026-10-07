@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css'; // Global styles
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { ChatWidget } from '@/components/ChatWidget'; // BARU
 
 export const metadata: Metadata = {
   title: 'PPID Kementerian Agama Kota Parepare',
@@ -31,6 +32,8 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
       <body suppressHydrationWarning>
         <ThemeProvider>
           {children}
+          <ChatWidget />
+          <div style={{position:'fixed',bottom:0,left:0,zIndex:9999,background:'red',color:'white'}}>TES</div> {/* BARU */}
         </ThemeProvider>
       </body>
     </html>
