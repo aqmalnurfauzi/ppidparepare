@@ -157,7 +157,9 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         sasaran: 'PNS & PPPK',
         deskripsi: 'Template resmi surat pertanggungjawaban bukti kehadiran bagi pegawai atau guru madrasah yang mengalami lupa absen atau kendala teknis pada aplikasi presensi elektronik (Pusaka/Presensi Online) untuk disahkan atasan langsung.',
         labelPanduan: 'Unduh Format Surat Lupa Absen (Google Drive)',
-        urlPanduan: 'https://docs.google.com/document/d/1DEoWj5mDrTXZhgjAkwdPH5Tg03TyLhij/edit?usp=sharing&ouid=112206925890698995511&rtpof=true&sd=true'
+        urlPanduan: 'https://docs.google.com/document/d/1DEoWj5mDrTXZhgjAkwdPH5Tg03TyLhij/edit?usp=sharing&ouid=112206925890698995511&rtpof=true&sd=true',
+        labelFormulir: 'Registrasi Jadwal Konsultasi',
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
       }
     ]
   }
