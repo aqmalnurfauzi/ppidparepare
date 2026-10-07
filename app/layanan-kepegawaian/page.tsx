@@ -8,7 +8,7 @@ import { Footer } from '@/components/Footer';
 interface LayananDetail {
   kodeLayanan: string;
   nama: string;
-  sasaran: 'PNS' | 'PNS & PPPK' | 'Seluruh ASN';
+  sasaran: 'PNS' | 'PNS & PPPK' | 'Seluruh ASN' | 'Seluruh Masyarakat';
   deskripsi: string;
   labelPanduan: string;
   urlPanduan: string;
@@ -135,13 +135,13 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
       },
       {
         kodeLayanan: 'C.3',
-        nama: 'Survei Kepuasan Layanan Kepegawaian (Triwulan IV)',
-        sasaran: 'Seluruh ASN',
-        deskripsi: 'Instrumen survei kepuasan internal aparatur untuk mengukur mutu, kecepatan, dan transparansi pelayanan kepegawaian Kantor Kemenag Kota Parepare.',
+        nama: 'Survei Kepuasan Layanan Masyarakat',
+        sasaran: 'Seluruh Masyarakat',
+        deskripsi: 'Instrumen survei kepuasan masyarakat untuk mengukur mutu, kecepatan, dan transparansi pelayanan kepegawaian Kantor Kemenag Kota Parepare.',
         labelPanduan: 'Informasi Penilaian SKM',
-        urlPanduan: 'https://drive.google.com/file/d/info-skm-kemenag/view',
+        urlPanduan: 'https://drive.google.com/file/d/1vfRFnVWrHRL4Uq13FqG-evYlggLorzJe/view?usp=sharing',
         labelFormulir: 'Kuesioner Survei SKM',
-        urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLScXi71sIsMtksj--TSOD9INHsLYOF9qJvnXxCQXE-jyMhUXyw/viewform?usp=header'
+        urlFormulir: 'https://skm.go.id/share/instansi/0dc5ab4e-d242-49b3-9755-20739a7f7856/2'
       },
       {
         kodeLayanan: 'C.4',
@@ -157,7 +157,9 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         sasaran: 'PNS & PPPK',
         deskripsi: 'Template resmi surat pertanggungjawaban bukti kehadiran bagi pegawai atau guru madrasah yang mengalami lupa absen atau kendala teknis pada aplikasi presensi elektronik (Pusaka/Presensi Online) untuk disahkan atasan langsung.',
         labelPanduan: 'Unduh Format Surat Lupa Absen (Google Drive)',
-        urlPanduan: 'https://docs.google.com/document/d/1DEoWj5mDrTXZhgjAkwdPH5Tg03TyLhij/edit?usp=sharing&ouid=112206925890698995511&rtpof=true&sd=true'
+        urlPanduan: 'https://docs.google.com/document/d/1DEoWj5mDrTXZhgjAkwdPH5Tg03TyLhij/edit?usp=sharing&ouid=112206925890698995511&rtpof=true&sd=true',
+        labelFormulir: 'Registrasi Jadwal Konsultasi',
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
       }
     ]
   }
