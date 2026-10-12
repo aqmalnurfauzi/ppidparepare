@@ -2,16 +2,18 @@
 import { NextResponse, after } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { bangunIndeks, jawab, type Indeks, type KbItem } from '@/lib/chatbot';
+import { ambilIp, terlaluBanyak } from '@/lib/rate-limit';
 import fallbackKb from '@/data/chatbot-faq.json';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const MAKS_PANJANG = 300;
-const BATAS_REQUEST = 15; // per IP
-const JENDELA_MS = 60_000;
 const CACHE_MS = 5 * 60_000; // basis pengetahuan dimuat ulang tiap 5 menit
 const BATAS_DB_MS = 3000; // jika Supabase lebih lambat dari ini, pakai data cadangan
+
+// Pencatatan interaksi ke Supabase. Matikan sementara dengan CHATBOT_LOG=off di .env.local
+const LOG_AKTIF = process.env.CHATBOT_LOG !== 'off';
 
 /** Membatasi waktu tunggu query Supabase agar chatbot tidak ikut macet saat database tidak terjangkau. */
 function batasWaktu<T>(p: PromiseLike<T>, ms = BATAS_DB_MS): Promise<T> {
@@ -20,30 +22,6 @@ function batasWaktu<T>(p: PromiseLike<T>, ms = BATAS_DB_MS): Promise<T> {
     timer = setTimeout(() => tolak(new Error('Supabase tidak merespons')), ms);
   });
   return Promise.race([Promise.resolve(p), habis]).finally(() => clearTimeout(timer));
-}
-
-// ---------------------------------------------------------------------------
-// Rate limit sederhana (per instance server).
-// Di hosting serverless (mis. Vercel) tiap instance punya memori sendiri, jadi ini
-// hanya pengaman dasar. Untuk perlindungan ketat gunakan Upstash Redis / WAF hosting.
-// ---------------------------------------------------------------------------
-const hits = new Map<string, number[]>();
-
-function terlaluBanyak(ip: string): boolean {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < JENDELA_MS);
-  recent.push(now);
-  hits.set(ip, recent);
-  if (hits.size > 5000) {
-    hits.forEach((v, k) => {
-      if (v.every((t) => now - t >= JENDELA_MS)) hits.delete(k);
-    });
-  }
-  return recent.length > BATAS_REQUEST;
-}
-
-function ambilIp(req: Request): string {
-  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'tak-dikenal';
 }
 
 // ---------------------------------------------------------------------------
@@ -106,9 +84,23 @@ async function ambilIndeks(): Promise<Indeks> {
   return indeks;
 }
 
-// ---------------------------------------------------------------------------
+// GET /api/chat -> cek cepat apakah rute hidup (buka alamat ini langsung di browser)
+export async function GET() {
+  try {
+    const indeks = await ambilIndeks();
+    return NextResponse.json({ ok: true, jumlah_topik: indeks.items.length, pencatatan: LOG_AKTIF });
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: process.env.NODE_ENV === 'production' ? 'gagal memuat basis pengetahuan' : String(e) },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(req: Request) {
-  if (terlaluBanyak(ambilIp(req))) {
+  const mulai = performance.now();
+
+  if (terlaluBanyak(`chat:${ambilIp(req)}`, 15)) {
     return NextResponse.json(
       { balasan: 'Terlalu banyak permintaan. Mohon tunggu sebentar lalu coba kembali.', status: 'fallback', kategori: '', aksi: [], saran: [] },
       { status: 429, headers: { 'Retry-After': '60' } },
@@ -135,20 +127,30 @@ export async function POST(req: Request) {
 
   const indeks = await ambilIndeks();
   const hasil = jawab(indeks, pesan);
+  const id = crypto.randomUUID(); // dipakai klien untuk mengaitkan umpan balik 👍/👎
+  const durasi = Math.round(performance.now() - mulai); // waktu proses sistem (ms)
 
-  // Catat pertanyaan yang tidak terjawab agar admin bisa menambah FAQ baru dari data ini.
-  if (hasil.status === 'fallback' || hasil.status === 'saran') {
+  // Catat SEMUA interaksi (bahan evaluasi: proporsi terjawab otomatis, waktu respons, topik terbanyak)
+  if (LOG_AKTIF) {
     after(async () => {
       try {
-        await supabase.from('chatbot_log').insert({ pesan, status: hasil.status, skor: Number(hasil.skor.toFixed(3)) });
+        await supabase.from('chatbot_interaksi').insert({
+          id,
+          pesan,
+          status: hasil.status,
+          kategori: hasil.kategori || null,
+          skor: Number(hasil.skor.toFixed(3)),
+          durasi_ms: durasi,
+        });
       } catch (e) {
-        console.error('chatbot_log gagal ditulis:', e);
+        console.error('chatbot_interaksi gagal ditulis:', e);
       }
     });
   }
 
   // Skor kemiripan sengaja tidak dikirim ke klien.
   return NextResponse.json({
+    id,
     balasan: hasil.balasan,
     status: hasil.status,
     kategori: hasil.kategori,

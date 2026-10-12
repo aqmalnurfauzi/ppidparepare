@@ -1,5 +1,5 @@
 -- supabase/chatbot.sql
--- Jalankan di Supabase Dashboard > SQL Editor.
+-- Jalankan di Supabase Dashboard > SQL Editor SETELAH project Supabase yang benar tersedia.
 -- Aman dijalankan ulang untuk tabel & kebijakan; bagian seed hanya berjalan jika tabel masih kosong.
 
 -- 1) Basis pengetahuan chatbot (terpisah dari tabel "faqs" agar halaman /faq di website tidak ikut berubah)
@@ -12,29 +12,50 @@ create table if not exists public.chatbot_kb (
   dibuat_pada timestamptz not null default now()
 );
 
--- 2) Log pertanyaan yang tidak terjawab (untuk bahan menambah FAQ)
-create table if not exists public.chatbot_log (
-  id bigint generated always as identity primary key,
+-- 2) Catatan SEMUA interaksi (bahan evaluasi: proporsi terjawab otomatis, waktu proses, topik terbanyak)
+--    status: sapaan | teridentifikasi | saran | fallback
+create table if not exists public.chatbot_interaksi (
+  id uuid primary key,
   pesan text not null check (char_length(pesan) <= 300),
-  status text not null,
+  status text not null check (status in ('sapaan', 'teridentifikasi', 'saran', 'fallback')),
+  kategori text,
   skor numeric,
+  durasi_ms integer check (durasi_ms >= 0),
+  dibuat_pada timestamptz not null default now()
+);
+create index if not exists chatbot_interaksi_dibuat_idx on public.chatbot_interaksi (dibuat_pada desc);
+create index if not exists chatbot_interaksi_status_idx on public.chatbot_interaksi (status);
+
+-- 3) Umpan balik 👍 (1) / 👎 (-1) per jawaban; satu suara per interaksi
+create table if not exists public.chatbot_umpan_balik (
+  id bigint generated always as identity primary key,
+  interaksi_id uuid not null unique references public.chatbot_interaksi(id) on delete cascade,
+  nilai smallint not null check (nilai in (1, -1)),
   dibuat_pada timestamptz not null default now()
 );
 
--- 3) Keamanan (RLS)
+-- 4) Keamanan (RLS)
 alter table public.chatbot_kb enable row level security;
-alter table public.chatbot_log enable row level security;
+alter table public.chatbot_interaksi enable row level security;
+alter table public.chatbot_umpan_balik enable row level security;
 
 drop policy if exists "chatbot_kb dapat dibaca publik" on public.chatbot_kb;
 create policy "chatbot_kb dapat dibaca publik" on public.chatbot_kb
   for select using (aktif = true);
 
-drop policy if exists "chatbot_log boleh ditambah" on public.chatbot_log;
-create policy "chatbot_log boleh ditambah" on public.chatbot_log
+drop policy if exists "chatbot_interaksi boleh ditambah" on public.chatbot_interaksi;
+create policy "chatbot_interaksi boleh ditambah" on public.chatbot_interaksi
   for insert with check (char_length(pesan) <= 300);
--- Sengaja TIDAK ada policy select untuk chatbot_log: isi log hanya bisa dibaca dari Dashboard Supabase.
 
--- 4) Data awal dari faq.json (hanya jika tabel masih kosong)
+drop policy if exists "chatbot_umpan_balik boleh ditambah" on public.chatbot_umpan_balik;
+create policy "chatbot_umpan_balik boleh ditambah" on public.chatbot_umpan_balik
+  for insert with check (nilai in (1, -1));
+
+-- Sengaja TIDAK ada policy select/update/delete untuk chatbot_interaksi dan chatbot_umpan_balik:
+-- isinya hanya bisa dibaca dari Dashboard Supabase atau lewat kunci service_role di server.
+-- Jangan membuat VIEW di schema public tanpa "security_invoker = true", karena view dapat membuka data ini.
+
+-- 5) Data awal dari faq.json (hanya jika tabel masih kosong)
 do $$
 begin
   if not exists (select 1 from public.chatbot_kb) then
