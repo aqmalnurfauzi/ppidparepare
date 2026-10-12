@@ -67,3 +67,83 @@ export const PermohonanListQuerySchema = z.object({
 });
 
 export type PermohonanListQuery = z.infer<typeof PermohonanListQuerySchema>;
+
+/**
+ * Validated enum for applicant category.
+ */
+export const KategoriPemohonEnum = z.enum(
+  ['perorangan', 'kelompok', 'badan_hukum'],
+  {
+    error: 'Kategori pemohon harus perorangan, kelompok, atau badan_hukum',
+  }
+);
+
+/**
+ * Validation schema for new Permohonan creation.
+ * Enforces field lengths, mandatory fields, and format boundaries.
+ * Compatible with Zod 4 API.
+ */
+export const CreatePermohonanInputSchema = z.object({
+  nama_pemohon: z
+    .string({ error: 'Nama pemohon wajib diisi' })
+    .trim()
+    .min(1, 'Nama pemohon tidak boleh kosong')
+    .max(255, 'Nama pemohon maksimal 255 karakter'),
+  kebutuhan: z
+    .string({ error: 'Rincian informasi yang dibutuhkan wajib diisi' })
+    .trim()
+    .min(1, 'Rincian informasi tidak boleh kosong')
+    .max(2000, 'Rincian informasi maksimal 2000 karakter'),
+  kategori_pemohon: KategoriPemohonEnum.optional().nullable(),
+  nik: z
+    .string()
+    .trim()
+    .regex(/^\d{16}$/, 'NIK harus terdiri dari tepat 16 digit angka')
+    .optional()
+    .nullable(),
+  instansi: z
+    .string()
+    .trim()
+    .max(255, 'Nama instansi maksimal 255 karakter')
+    .optional()
+    .nullable(),
+  alamat: z
+    .string()
+    .trim()
+    .max(500, 'Alamat maksimal 500 karakter')
+    .optional()
+    .nullable(),
+  telepon: z
+    .string()
+    .trim()
+    .max(20, 'Nomor telepon maksimal 20 karakter')
+    .optional()
+    .nullable(),
+  email: z
+    .string()
+    .trim()
+    .email('Format email tidak valid')
+    .max(255, 'Email maksimal 255 karakter')
+    .optional()
+    .nullable(),
+  tujuan_penggunaan: z
+    .string()
+    .trim()
+    .max(1000, 'Tujuan penggunaan maksimal 1000 karakter')
+    .optional()
+    .nullable(),
+  cara_memperoleh_informasi: z
+    .string()
+    .trim()
+    .max(100, 'Cara memperoleh informasi maksimal 100 karakter')
+    .optional()
+    .nullable(),
+  cara_mendapatkan_salinan: z
+    .string()
+    .trim()
+    .max(100, 'Cara mendapatkan salinan maksimal 100 karakter')
+    .optional()
+    .nullable(),
+});
+
+export type CreatePermohonanInput = z.infer<typeof CreatePermohonanInputSchema>;
