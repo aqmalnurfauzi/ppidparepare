@@ -39,8 +39,18 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         labelFormulir: 'Formulir Usul KP',
         urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLSdXgnO2XkjtP7b7pbjxxjLITXDVFC7Bv-PUOt4HyiqdCXCXLA/viewform'
       },
-      {
+       {
         kodeLayanan: 'A.2',
+        nama: 'Usul Kenaikan Jenjang Jabatan Fungsional',
+        sasaran: 'PNS',
+        deskripsi: 'Pengajuan kenaikan jenjang jabatan bagi Pejabat Fungsional di lingkungan Kementerian Agama Kota Parepare yang telah memenuhi Angka Kredit (AK) yang disyaratkan dan lulus Uji Kompetensi.',
+        labelPanduan: 'Format Berkas & Syarat (PDF)',
+        urlPanduan: 'https://drive.google.com/file/d/14i_gQmsER59yZ9b-4bUeAiOysogXJkdE/view?usp=sharing',
+        labelFormulir: 'Formulir Usul Gelar',
+        urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLSf3Kg0Y2GBxevEagh8YMsYzqam1G1bjAy1uTLWWPV4X1G_IlA/closedform'
+      },
+      {
+        kodeLayanan: 'A.3',
         nama: 'Usul Pencantuman Gelar Akademik',
         sasaran: 'PNS',
         deskripsi: 'Pengajuan pengesahan dan pencatatan gelar akademik (S1, S2, S3) yang diperoleh setelah pengangkatan pertama sebagai PNS pada pangkalan data kepegawaian.',
@@ -50,7 +60,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLScMi2dBJM1NjitjmZE0UUr0-bji2cEj59EwF-rfS_wnEZMxyQ/viewform'
       },
       {
-        kodeLayanan: 'A.3',
+        kodeLayanan: 'A.4',
         nama: 'Usul Pencantuman Gelar Profesi',
         sasaran: 'PNS',
         deskripsi: 'Pengusulan pencatatan gelar profesi resmi pendidik/fungsional (misal: Gr. / Guru Profesional) pada sistem informasi aparatur negara.',
@@ -60,7 +70,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLScWSY_OKbhM5H-oxqDmRJ3cQoGxRNB0eTMtP5XF1C_7bJgfTg/viewform?usp=dialog'
       },
       {
-        kodeLayanan: 'A.4',
+        kodeLayanan: 'A.5',
         nama: 'Usul Pensiun Pegawai Negeri Sipil',
         sasaran: 'PNS',
         deskripsi: 'Pengajuan resmi penetapan surat keputusan pemberhentian dengan hak pensiun (Batas Usia Pensiun/BUP, Janda/Duda, atau Atas Permintaan Sendiri).',
@@ -70,7 +80,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLSdoyPJhZuMBsOlUVtmasfVpqj-NOI9TqK5n4YDyp9KFe-MwXw/viewform'
       },
       {
-        kodeLayanan: 'A.5',
+        kodeLayanan: 'A.6',
         nama: 'Usul Surat Keterangan Memiliki Ijazah (SKMI)',
         sasaran: 'PNS',
         deskripsi: 'Permohonan dokumen pengganti izin belajar bagi pegawai yang telah menyelesaikan pendidikan Strata-1 sebelum diangkat menjadi CPNS/PNS.',
@@ -80,7 +90,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLSfYQM2Ds5rgKE_hmzzHAHB2pDnwN3I5Jdz-0CT37dkNruQYfg/viewform'
       },
       {
-        kodeLayanan: 'A.6',
+        kodeLayanan: 'A.7',
         nama: 'Usul Tugas Belajar & Izin Belajar',
         sasaran: 'PNS',
         deskripsi: 'Pengusulan rekomendasi studi dan izin resmi melanjutkan pendidikan formal bagi pegawai kantor dan guru madrasah di lingkungan Kemenag Parepare.',
@@ -165,7 +175,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
   }
 ];
 
-export default function LayananKepegawaianPage() {
+export default function SIMPELSDMPage() {
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans flex flex-col justify-between selection:bg-[#005a2b] selection:text-white">
       <Navbar />
@@ -199,16 +209,16 @@ export default function LayananKepegawaianPage() {
               <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
               </svg>
-              <span className="text-white font-medium">Layanan Kepegawaian</span>
+              <span className="text-white font-medium">SIMPEL SDM</span>
             </nav>
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
                 <span className="inline-block px-3 py-1 text-[11px] font-bold tracking-wider uppercase rounded-full bg-emerald-950/70 border border-emerald-400/30 text-emerald-200 mb-3">
-                  Layanan Kepegawaian Ramah dan Cepat 
+                  Sistem Pelayanan Informasi Manajemen Pelayanan Sumber Daya Manusia
                 </span>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-                  Katalog Layanan Administrasi Kepegawaian
+                  Katalog Layanan Manajemen Kepegawaian
                 </h1>
                 <p className="mt-3 text-sm text-emerald-50 max-w-3xl leading-relaxed">
                   Pintu pelayanan digital terpadu untuk pengusulan kenaikan pangkat, ijazah, perizinan cuti, pelaporan kinerja bulanan, dan administrasi aparatur sipil negara di lingkungan Kantor Kementerian Agama Kota Parepare.
