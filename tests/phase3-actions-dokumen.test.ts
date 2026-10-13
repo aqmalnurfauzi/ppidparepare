@@ -104,7 +104,7 @@ describe('Phase 3 WS2: Static Contracts & Security Boundary Verifications', () =
     );
   });
 
-  it('ACT-DOC-STATIC-05: Phase 2 Gate B migration 000005 invariants (private bucket, partial unique index, triggers)', () => {
+  it('ACT-DOC-STATIC-05: Phase 2 Gate B migration 000005 invariants (private bucket, partial unique index, triggers, service_role support)', () => {
     const sql = fs.readFileSync(
       'db/migrations/20261007000005_phase2_gate_b_authorization_and_storage.sql',
       'utf-8'
@@ -114,6 +114,16 @@ describe('Phase 3 WS2: Static Contracts & Security Boundary Verifications', () =
     assert.match(sql, /uq_dokumen_ktp_per_permohonan/);
     assert.match(sql, /check_dokumen_quota_and_role/);
     assert.match(sql, /guard_dokumen_immutable_columns/);
+    assert.match(sql, /v_caller_role\s*=\s*'service_role'/);
+    assert.match(sql, /v_is_adm\s*:=\s*\(v_caller_role\s*=\s*'service_role'\)\s*OR\s*public\.is_admin\(\)/);
+    assert.match(sql, /AS RESTRICTIVE FOR INSERT/);
+    assert.match(sql, /AS RESTRICTIVE FOR UPDATE/);
+    assert.match(sql, /AS RESTRICTIVE FOR DELETE/);
+    assert.match(sql, /AS RESTRICTIVE FOR SELECT/);
+    assert.match(sql, /Restrict read access to permohonan-dokumen/);
+    assert.match(sql, /PERFORM 1 FROM public\.permohonan WHERE id = NEW\.permohonan_id FOR NO KEY UPDATE;/);
+    assert.match(sql, /DROP POLICY IF EXISTS "Users can insert own dokumen or admin insert" ON public\.dokumen_permohonan;/);
+    assert.match(sql, /REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON public\.dokumen_permohonan FROM anon, authenticated/);
   });
 });
 
@@ -354,10 +364,35 @@ describe('Phase 3 WS2: Live Staging Private Storage & Security Barrier Tests', (
     assert.ok(dbErr !== null, 'Anon client was able to insert into dokumen_permohonan!');
   });
 
-  it('ACT-DOC-LIVE-02: Authenticated applicant can insert document to own permohonan', async (t) => {
+  it('ACT-DOC-LIVE-02: Direct client insert by authenticated applicant is blocked by DCL, fixture created via serviceClient', async (t) => {
     if (!guard(t)) return;
 
-    const { data, error } = await applicantA.client
+    // 1. Verify direct client insert by authenticated applicant is rejected with 42501
+    const { error: directErr } = await applicantA.client
+      .from('dokumen_permohonan')
+      .insert({
+        permohonan_id: permohonanAId,
+        kategori_dokumen: 'identitas_ktp',
+        storage_path: `${permohonanAId}/ktp_test.pdf`,
+        original_filename: 'ktp_applicant_a.pdf',
+        mime_type: 'application/pdf',
+        file_size_bytes: 2048,
+      });
+
+    assert.ok(directErr !== null, 'Direct client insert should be denied by table privileges');
+    assert.equal(directErr.code, '42501', `Expected 42501 permission denied, got: ${directErr.code}`);
+    assert.match(directErr.message.toLowerCase(), /permission denied for table dokumen_permohonan/);
+
+    // 2. Upload physical file fixture to private storage bucket via serviceClient
+    await serviceClient?.storage
+      .from('permohonan-dokumen')
+      .upload(`${permohonanAId}/ktp_test.pdf`, new Uint8Array([0x25, 0x50, 0x44, 0x46]), {
+        contentType: 'application/pdf',
+        upsert: true,
+      });
+
+    // 3. Insert valid document fixture via serviceClient (representing backend Server Action mediation)
+    const { data: fixtureData, error: fixtureErr } = await serviceClient!
       .from('dokumen_permohonan')
       .insert({
         permohonan_id: permohonanAId,
@@ -370,10 +405,11 @@ describe('Phase 3 WS2: Live Staging Private Storage & Security Barrier Tests', (
       .select(DOKUMEN_USER_PROJECTION)
       .single();
 
-    assert.equal(error, null, error?.message);
-    assert.ok(data, 'Document data must be returned');
-    assert.ok(data.id, 'Document ID must be generated');
-    assert.equal(data.kategori_dokumen, 'identitas_ktp');
+    assert.equal(fixtureErr, null, fixtureErr?.message);
+    assert.ok(fixtureData, 'Document fixture data must be returned');
+    const created = fixtureData as Record<string, any>;
+    assert.ok(created.id, 'Document ID must be generated');
+    assert.equal(created.kategori_dokumen, 'identitas_ktp');
   });
 
   it('ACT-DOC-LIVE-03: Cross-user violation rejected (User B cannot insert into User A permohonan)', async (t) => {
@@ -389,15 +425,17 @@ describe('Phase 3 WS2: Live Staging Private Storage & Security Barrier Tests', (
     });
 
     assert.ok(error !== null, 'IDOR: User B was able to insert document into User A permohonan!');
-    assert.match(error!.message.toLowerCase(), /row-level security|policy|violates/);
+    assert.equal(error!.code, '42501', `Expected 42501 permission denied, got ${error!.code}`);
+    assert.match(error!.message.toLowerCase(), /permission denied for table dokumen_permohonan/);
   });
 
   it('ACT-DOC-LIVE-04: KTP quota barrier: partial unique index blocks second KTP per permohonan', async (t) => {
     if (!guardMigration000005(t)) return;
 
-    // Applicant A already uploaded one KTP in ACT-DOC-LIVE-02.
-    // Attempting a second KTP on the same permohonan must trigger uq_dokumen_ktp_per_permohonan.
-    const { error } = await applicantA.client.from('dokumen_permohonan').insert({
+    // Applicant A already has one KTP inserted in ACT-DOC-LIVE-02.
+    // Attempting a second KTP on the same permohonan via backend serviceClient
+    // must trigger uq_dokumen_ktp_per_permohonan regardless of caller privilege.
+    const { error } = await serviceClient!.from('dokumen_permohonan').insert({
       permohonan_id: permohonanAId,
       kategori_dokumen: 'identitas_ktp',
       storage_path: `${permohonanAId}/ktp_duplicate.pdf`,
@@ -407,6 +445,7 @@ describe('Phase 3 WS2: Live Staging Private Storage & Security Barrier Tests', (
     });
 
     assert.ok(error !== null, 'Duplicate KTP was accepted!');
+    assert.equal(error!.code, '23505', `Expected 23505 unique constraint violation, got ${error!.code}`);
     assert.match(
       error!.message.toLowerCase(),
       /uq_dokumen_ktp_per_permohonan|unique constraint|duplicate key/
@@ -416,6 +455,7 @@ describe('Phase 3 WS2: Live Staging Private Storage & Security Barrier Tests', (
   it('ACT-DOC-LIVE-05: Category barrier: non-admin user cannot upload admin categories', async (t) => {
     if (!guardMigration000005(t)) return;
 
+    // 1. Verify direct client insert of admin category is blocked by DCL table privileges (42501)
     const { error } = await applicantA.client.from('dokumen_permohonan').insert({
       permohonan_id: permohonanAId,
       kategori_dokumen: 'bukti_penerimaan', // admin category!
@@ -426,7 +466,8 @@ describe('Phase 3 WS2: Live Staging Private Storage & Security Barrier Tests', (
     });
 
     assert.ok(error !== null, 'Non-admin user was able to insert admin document category!');
-    assert.match(error!.message, /hanya dapat diunggah oleh administrator|check_dokumen_quota/i);
+    assert.equal(error!.code, '42501', `Expected 42501 permission denied, got ${error!.code}`);
+    assert.match(error!.message.toLowerCase(), /permission denied for table dokumen_permohonan/);
   });
 
   it('ACT-DOC-LIVE-06: Immutability trigger guards storage_path and permohonan_id against tampering', async (t) => {
@@ -443,13 +484,26 @@ describe('Phase 3 WS2: Live Staging Private Storage & Security Barrier Tests', (
     assert.ok(doc, 'Existing document row required');
     assert.ok(doc.id, 'Existing document row ID required');
 
-    // Attempt direct UPDATE to storage_path
-    const { error } = await applicantA.client
+    // 1. Attempt direct UPDATE by authenticated client (blocked by REVOKE UPDATE)
+    const { error: clientUpdateErr } = await applicantA.client
       .from('dokumen_permohonan')
       .update({ storage_path: 'tampered/new_path.pdf' })
       .eq('id', doc.id);
 
-    assert.ok(error !== null, 'Tampering with storage_path was permitted!');
+    assert.ok(clientUpdateErr !== null, 'Tampering with storage_path by client was permitted!');
+    assert.equal(clientUpdateErr.code, '42501');
+
+    // 2. Attempt UPDATE by serviceClient (triggers trg_guard_dokumen_immutable)
+    const { error: serviceUpdateErr } = await serviceClient!
+      .from('dokumen_permohonan')
+      .update({ storage_path: 'tampered/service_path.pdf' })
+      .eq('id', doc.id);
+
+    assert.ok(serviceUpdateErr !== null, 'Tampering with storage_path via serviceClient was permitted!');
+    assert.match(
+      serviceUpdateErr.message,
+      /storage_path pada dokumen_permohonan bersifat immutable/
+    );
   });
 
   it('ACT-DOC-LIVE-07: Projections query excludes storage_path in database results', async (t) => {
@@ -473,5 +527,16 @@ describe('Phase 3 WS2: Live Staging Private Storage & Security Barrier Tests', (
     assert.ok(firstDoc.original_filename, 'Original filename present');
     assert.ok(firstDoc.mime_type, 'MIME type present');
     assert.ok(firstDoc.created_at, 'Created at present');
+  });
+
+  it('ACT-DOC-LIVE-08: Storage RLS barrier: cross-user download of permohonan-dokumen objects is rejected', async (t) => {
+    if (!guardMigration000005(t)) return;
+
+    // Applicant B attempts to download an object belonging to Applicant A directly from private storage
+    const { data, error } = await applicantB.client.storage
+      .from('permohonan-dokumen')
+      .download(`${permohonanAId}/ktp_test.pdf`);
+
+    assert.ok(error !== null || !data, 'Cross-user storage download must be blocked by RLS');
   });
 });

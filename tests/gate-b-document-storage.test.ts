@@ -5,7 +5,7 @@
  * - DOC-VAL-01..08: Magic-byte inspection, file size bounds, dangerous signature blocking
  * - DOC-QUOTA-01..03: KTP quota (1) and supporting document quota (5) enforcement
  * - DOC-AUTHZ-01..04: Role categories, ownership validation, signed URL 60s TTL
- * - DOC-DB-01..05: Migration 000005 SQL invariants (private bucket, unique partial index, triggers)
+ * - DOC-DB-01..06: Migration 000005 SQL invariants (private bucket, unique partial index, triggers, service_role support)
  */
 
 import { describe, it } from 'node:test';
@@ -194,8 +194,15 @@ describe('Gate B Step 2: Migration 000005 SQL Static Inspection', () => {
     assert.match(sql, /image\/png/);
   });
 
-  it('DOC-DB-02: Legacy bucket dokumen is restricted to private', () => {
-    assert.match(sql, /UPDATE storage\.buckets\s+SET public\s*=\s*false\s+WHERE id\s*=\s*'dokumen'/);
+  it('DOC-DB-02: Public bucket dokumen is preserved for public information while permohonan-dokumen is quarantined as private', () => {
+    assert.match(sql, /permohonan-dokumen/);
+    assert.match(sql, /public\s*=\s*false/i);
+    // Verifies that dokumen is not blindly privatized without migrating public URLs
+    assert.equal(
+      sql.includes("UPDATE storage.buckets\n    SET public = false\n    WHERE id = 'dokumen'"),
+      false,
+      'Must not privatize bucket dokumen to avoid breaking public document downloads'
+    );
   });
 
   it('DOC-DB-03: Partial unique index enforces max 1 KTP per permohonan', () => {
@@ -207,6 +214,7 @@ describe('Gate B Step 2: Migration 000005 SQL Static Inspection', () => {
 
   it('DOC-DB-04: Trigger trg_check_dokumen_quota enforces 5 supporting docs and admin categories', () => {
     assert.match(sql, /CREATE OR REPLACE FUNCTION public\.check_dokumen_quota_and_role\(\)/);
+    assert.match(sql, /PERFORM 1 FROM public\.permohonan WHERE id = NEW\.permohonan_id FOR NO KEY UPDATE;/);
     assert.match(sql, /v_supporting_count\s*>=\s*5/);
     assert.match(sql, /Batas kuota dokumen pendukung terlampaui/);
     assert.match(sql, /kategori_dokumen IN \('bukti_penerimaan', 'dokumen_jawaban'\) AND NOT v_is_adm/);
@@ -216,6 +224,49 @@ describe('Gate B Step 2: Migration 000005 SQL Static Inspection', () => {
     assert.match(sql, /CREATE OR REPLACE FUNCTION public\.guard_dokumen_immutable_columns\(\)/);
     assert.match(sql, /permohonan_id pada dokumen_permohonan bersifat immutable/);
     assert.match(sql, /storage_path pada dokumen_permohonan bersifat immutable/);
-    assert.match(sql, /REVOKE UPDATE, DELETE, TRUNCATE ON public\.dokumen_permohonan FROM anon, authenticated/);
+    assert.match(sql, /DROP POLICY IF EXISTS "Users can insert own dokumen or admin insert" ON public\.dokumen_permohonan;/);
+    assert.match(sql, /REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON public\.dokumen_permohonan FROM anon, authenticated/);
+  });
+
+  it('DOC-DB-06: Robust service_role caller detection preserves admin uploads without quota bypass', () => {
+    assert.match(sql, /v_jwt_claims\s*:=\s*nullif\(current_setting\('request\.jwt\.claims', true\), ''\)::jsonb/);
+    assert.match(sql, /v_is_adm\s*:=\s*\(v_caller_role\s*=\s*'service_role'\)\s*OR\s*public\.is_admin\(\)/);
+    // Ensure supporting documents count check is NOT conditioned on v_is_adm (no quota bypass for anyone)
+    const supportingIdx = sql.indexOf('v_supporting_count >= 5');
+    assert.ok(supportingIdx > 0);
+    const supportingSlice = sql.substring(supportingIdx - 100, supportingIdx + 50);
+    assert.equal(supportingSlice.includes('v_is_adm'), false, 'Quota check must never bypass based on admin status');
+  });
+  it('DOC-DB-07: Direct client storage mutations are blocked with AS RESTRICTIVE policies while allowing service_role', () => {
+    assert.match(
+      sql,
+      /CREATE POLICY "Disallow direct client upload to permohonan-dokumen"\s+ON storage\.objects AS RESTRICTIVE FOR INSERT/
+    );
+    assert.match(
+      sql,
+      /CREATE POLICY "Disallow direct client update to permohonan-dokumen"\s+ON storage\.objects AS RESTRICTIVE FOR UPDATE/
+    );
+    assert.match(
+      sql,
+      /CREATE POLICY "Disallow direct client delete to permohonan-dokumen"\s+ON storage\.objects AS RESTRICTIVE FOR DELETE/
+    );
+    // Verifies that service_role is granted explicit bypass across restrictive policies
+    assert.match(sql, /auth\.role\(\) = 'service_role' OR\s+current_user IN \('service_role'/);
+  });
+  it("DOC-DB-08: Restrictive and permissive Dual-Shield SELECT policies prevent storage data leakage", () => {
+    // Restrictive SELECT policy enforces zero bypass across permissive policies
+    assert.match(
+      sql,
+      /CREATE POLICY "Restrict read access to permohonan-dokumen"\s+ON storage\.objects AS RESTRICTIVE FOR SELECT/
+    );
+    assert.match(sql, /bucket_id <> 'permohonan-dokumen'/);
+    assert.match(sql, /auth\.role\(\) = 'service_role' OR\s+current_user IN \('service_role'/);
+    assert.match(sql, /public\.is_admin\(\)/);
+
+    // Permissive SELECT policy provides required gateway for authorized access
+    assert.match(
+      sql,
+      /CREATE POLICY "Users can read own permohonan storage objects or admin read all"\s+ON storage\.objects FOR SELECT/
+    );
   });
 });
