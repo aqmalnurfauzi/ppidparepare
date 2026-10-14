@@ -98,6 +98,46 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         urlPanduan: 'https://drive.google.com/file/d/1uzJewOqNX7uU5brD_DlVVgZOzfAAgx6q/view?usp=sharing',
         labelFormulir: 'Formulir Izin Belajar',
         urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLSfRegdEjQddNKQQker3t5dIcaQfsEMOCTHCFEtQaTJ68KeiIA/viewform?usp=sf_link'
+      },
+      {
+        kodeLayanan: 'A.8',
+        nama: 'Peninjauan Masa Kerja (PMK)',
+        sasaran: 'PNS',
+        deskripsi: 'Pengajuan perhitungan kembali masa kerja yang relevan (sebelum diangkat menjadi CPNS) untuk disesuaikan dengan pangkat dan gaji pokok ASN.',
+        labelPanduan: 'Format Berkas & Syarat (PDF)',
+        urlPanduan: 'https://drive.google.com/file/d/14kooPMRQP8esu3L65CU7QdZmKd7PZzfm/view?usp=sharing',
+        labelFormulir: 'Formulir Pendaftaran SLKS',
+        urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLScqLgMjEn2i-ngU20YDlHUXNP9DPh1CdTFa-mK8YWYHb1AkQw/viewform?usp=dialog'
+      },
+      {
+        kodeLayanan: 'A.9',
+        nama: 'Usul Mutasi Pegawai',
+        sasaran: 'PNS',
+        deskripsi: 'Fasilitas pengajuan perpindahan tugas, wilayah, atau instansi kerja bagi PNS sesuai dengan formasi, kebutuhan, dan persetujuan pejabat berwenang.',
+        labelPanduan: 'SOP & Syarat Mutasi (PDF)',
+        urlPanduan: 'https://drive.google.com/file/d/1hEHxDh7ueXfciIPOvR7CHt2u8G-xoe-R/view?usp=sharing',
+        labelFormulir: 'Formulir Usul Mutasi',
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+      },
+      {
+        kodeLayanan: 'A.10',
+        nama: 'Pengisian Jabatan',
+        sasaran: 'PNS',
+        deskripsi: 'Pengusulan penempatan pegawai ke dalam suatu jabatan fungsional, pelaksana, maupun struktural sesuai dengan kualifikasi dan kompetensi yang dibutuhkan.',
+        labelPanduan: 'Dokumen Syarat Pengisian (PDF)',
+        urlPanduan: 'https://drive.google.com/file/d/1hBDCFGFSOn6kK-Rlkxt2TVNdAovRrNKI/view?usp=sharing',
+        labelFormulir: 'Formulir Usul Jabatan',
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+      },
+      {
+        kodeLayanan: 'A.11',
+        nama: 'Inpassing JF PJPH',
+        sasaran: 'PNS',
+        deskripsi: 'Layanan penyesuaian atau penyetaraan ke dalam Jabatan Fungsional Penyelenggara Jaminan Produk Halal bagi PNS yang memenuhi kualifikasi.',
+        labelPanduan: 'Format Berkas Inpassing (PDF)',
+        urlPanduan: 'https://drive.google.com/file/d/1rBNoX0kGWc_1EmJb1NcxMp_GIrDv-xRk/view?usp=sharing',
+        labelFormulir: 'Formulir Usul Inpassing',
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
       }
     ]
   },
@@ -115,6 +155,14 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         urlPanduan: 'https://drive.google.com/file/d/1O8upER9aHNhd8zPorE8skVwLrQKUBsRG/view?usp=sharing',
         labelFormulir: 'Formulir Pendaftaran SLKS',
         urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLScqLgMjEn2i-ngU20YDlHUXNP9DPh1CdTFa-mK8YWYHb1AkQw/viewform?usp=dialog'
+      },
+      {
+         kodeLayanan: 'B.2',
+        nama: 'Format Permohonan Surat Cuti (PPPK & PNS)',
+        sasaran: 'PNS & PPPK',
+        deskripsi: 'Formulir resmi permohonan izin cuti (Tahunan, Sakit, Alasan Penting, Melahirkan, dan Besar) sesuai Peraturan BKN No. 24/2017 & No. 7/2021.',
+        labelPanduan: 'Unduh Format Blanko Cuti (Google Drive)',
+        urlPanduan: 'https://drive.google.com/drive/folders/1UAdx1xtEzcZTqmQjGynzlVS9VwOmM6If'
       }
     ]
   },
@@ -155,14 +203,6 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
       },
       {
         kodeLayanan: 'C.4',
-        nama: 'Format Permohonan Surat Cuti (PPPK & PNS)',
-        sasaran: 'PNS & PPPK',
-        deskripsi: 'Formulir resmi permohonan izin cuti (Tahunan, Sakit, Alasan Penting, Melahirkan, dan Besar) sesuai Peraturan BKN No. 24/2017 & No. 7/2021.',
-        labelPanduan: 'Unduh Format Blanko Cuti (Google Drive)',
-        urlPanduan: 'https://drive.google.com/drive/folders/1UAdx1xtEzcZTqmQjGynzlVS9VwOmM6If'
-      },
-      {
-        kodeLayanan: 'C.5',
         nama: 'Format Surat Keterangan Lupa Absen (PNS & PPPK)',
         sasaran: 'PNS & PPPK',
         deskripsi: 'Template resmi surat pertanggungjawaban bukti kehadiran bagi pegawai atau guru madrasah yang mengalami lupa absen atau kendala teknis pada aplikasi presensi elektronik (Pusaka/Presensi Online) untuk disahkan atasan langsung.',
@@ -170,7 +210,37 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         urlPanduan: 'https://docs.google.com/document/d/1DEoWj5mDrTXZhgjAkwdPH5Tg03TyLhij/edit?usp=sharing&ouid=112206925890698995511&rtpof=true&sd=true',
         labelFormulir: 'Registrasi Jadwal Konsultasi',
         urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
-      }
+      },
+       {
+        kodeLayanan: 'C.5',
+        nama: 'Perbaikan Data ASN',
+        sasaran: 'Seluruh ASN',
+        deskripsi: 'Layanan pemutakhiran, sinkronisasi, dan perbaikan anomali data profil kepegawaian untuk diintegrasikan pada aplikasi kepegawaian nasional.',
+        labelPanduan: 'Daftar Bukti Dukung (PDF)',
+        urlPanduan: 'https://drive.google.com/file/d/1uFUalk2-oBcyPpik7Ox1MVCdi-YXfZ1R/view?usp=sharing',
+        labelFormulir: 'Formulir Perbaikan Data',
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+      },
+      {
+        kodeLayanan: 'C.6',
+        nama: 'Penyesuaian Simpeg5',
+        sasaran: 'Seluruh ASN',
+        deskripsi: 'Permohonan penyelesaian kendala teknis atau penyesuaian pembaruan data spesifik yang belum tersinkronisasi pada platform Simpeg5 Kementerian Agama.',
+        labelPanduan: 'Panduan Kendala Simpeg5 (PDF)',
+        urlPanduan: 'https://drive.google.com/file/d/1bNxNXymIdRnOwVmUlsw6q0L6kpWoK08G/view?usp=sharing',
+        labelFormulir: 'Formulir Penyesuaian Simpeg5',
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+      },
+      {
+        kodeLayanan: 'C.7',
+        nama: 'Layanan Kepegawaian Lainnya',
+        sasaran: 'Seluruh ASN',
+        deskripsi: 'Fasilitas bantuan untuk pengajuan administrasi atau urusan kepegawaian yang tidak tercantum secara spesifik pada katalog layanan di atas.',
+        labelPanduan: 'Ketentuan Layanan Umum (PDF)',
+        urlPanduan: 'https://drive.google.com/file/d/1m-KuDE1Df8Eq-SGkPamt4aDPO6brFy-K/view?usp=sharing',
+        labelFormulir: 'Formulir Bantuan Lainnya',
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+      }   
     ]
   }
 ];
