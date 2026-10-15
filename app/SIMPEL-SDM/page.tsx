@@ -251,15 +251,15 @@ export default function SIMPELSDMPage() {
       <Navbar />
 
       <div className="flex-1">
-       <header className="bg-gradient-to-r from-[#004d25] via-[#005a2b] to-[#046a38] text-white shadow-md border-b-2 border-emerald-800">
+       <header className="bg-gradient-to-r from-[#004d25] via-[#005a2b] to-[#046a38] dark:from-[#002e16] dark:via-[#00381b] dark:to-[#024021] text-white shadow-md border-b-2 border-emerald-800 dark:border-emerald-950">
           {/* Baris Identitas Satker */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 border-b border-emerald-700/50 flex flex-wrap items-center justify-between text-xs text-emerald-100 gap-2">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 border-b border-emerald-700/50 dark:border-emerald-900/60 flex flex-wrap items-center justify-between text-xs text-emerald-100 dark:text-emerald-200 gap-2">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-white tracking-wider uppercase">
                 Kementerian Agama Republik Indonesia
               </span>
               <span className="text-emerald-400">|</span>
-              <span className="text-emerald-100">Kantor Kota Parepare</span>
+              <span className="text-emerald-100 dark:text-emerald-200">Kantor Kota Parepare</span>
             </div>
             <div className="flex items-center gap-4 text-[11px] text-emerald-200">
               <span className="flex items-center gap-1.5">
