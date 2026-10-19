@@ -46,8 +46,8 @@ export default function AdminLogin() {
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm p-2">
                 <img src="/logo-kemenag.png" alt="Logo Kemenag" className="w-full h-full object-contain" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-1">PPID Admin Portal</h2>
-              <p className="text-emerald-100 dark:text-slate-400 text-sm">Silakan login untuk mengelola informasi</p>
+              <h2 className="text-2xl font-bold text-white mb-1">PPID Login Portal</h2>
+              <p className="text-emerald-100 dark:text-slate-400 text-sm">Silakan login untuk mengelola informasi atau permohonan</p>
             </div>
           </div>
 
@@ -66,18 +66,18 @@ export default function AdminLogin() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Username</label>
+                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Email</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                     <User className="h-5 w-5" />
                   </div>
                   <input
-                    type="text"
-                    name="username"
+                    type="email"
+                    name="email"
                     required
-                    autoComplete="username"
+                    autoComplete="email"
                     className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
-                    placeholder="Masukkan username"
+                    placeholder="nama@email.com"
                   />
                 </div>
               </div>
@@ -85,6 +85,9 @@ export default function AdminLogin() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center ml-1">
                   <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Password</label>
+                  <a href="/forgot-password" className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400">
+                    Lupa Password?
+                  </a>
                 </div>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
@@ -121,11 +124,20 @@ export default function AdminLogin() {
                   </>
                 ) : (
                   <>
-                    Masuk Dashboard
+                    Masuk
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </button>
+
+              <div className="text-center mt-4">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  Belum punya akun?{' '}
+                  <a href="/register" className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
+                    Daftar di sini
+                  </a>
+                </p>
+              </div>
             </form>
           </div>
           
