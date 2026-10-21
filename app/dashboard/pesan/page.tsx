@@ -70,7 +70,7 @@ export default function PesanMasuk() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white mb-2">Kotak Pesan</h1>
-          <p className="text-slate-500 dark:text-slate-400">Pesan masuk dari form "Kontak Kami" di halaman publik.</p>
+          <p className="text-slate-500 dark:text-slate-400">Pesan masuk dari form &quot;Kontak Kami&quot; di halaman publik.</p>
         </div>
       </div>
 

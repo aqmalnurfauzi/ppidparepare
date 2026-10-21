@@ -21,16 +21,15 @@ export default function AdminDashboard() {
   const [dataInformasiPublik, setDataInformasiPublik] = React.useState<any[]>([]);
   const [statsData, setStatsData] = React.useState({ permohonan: 0, pengguna: 0, keberatanPending: 0, permohonanPending: 0, totalDocs: 0 });
   const [tasks, setTasks] = React.useState<any[]>([]);
-  const [greeting, setGreeting] = React.useState('');
+  const [greeting] = React.useState(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Selamat Pagi';
+    if (hour < 15) return 'Selamat Siang';
+    if (hour < 18) return 'Selamat Sore';
+    return 'Selamat Malam';
+  });
 
   React.useEffect(() => {
-    // Set Greeting
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Selamat Pagi');
-    else if (hour < 15) setGreeting('Selamat Siang');
-    else if (hour < 18) setGreeting('Selamat Sore');
-    else setGreeting('Selamat Malam');
-
     async function loadData() {
       // Panggil server actions statis (tanpa dynamic import) untuk dashboard agar tidak ada waterfall 
       const { getDashboardStats } = await import('@/lib/actions');

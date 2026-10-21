@@ -38,14 +38,24 @@ export default function InformasiPage() {
   });
 
   const loadData = async () => {
-    setLoading(true);
     const data = await getInformasiPublik();
     setDataInformasiPublik(data);
     setLoading(false);
   };
 
   useEffect(() => {
-    loadData();
+    let isMounted = true;
+    async function init() {
+      const data = await getInformasiPublik();
+      if (isMounted) {
+        setDataInformasiPublik(data);
+        setLoading(false);
+      }
+    }
+    init();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const filteredData = useMemo(() => {

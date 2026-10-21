@@ -38,14 +38,24 @@ export default function PartisipasiPage() {
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
 
   const loadData = async () => {
-    setLoading(true);
     const data = await getPartisipasiPublik();
     setDataPartisipasi(data);
     setLoading(false);
   };
 
   useEffect(() => {
-    loadData();
+    let isMounted = true;
+    async function init() {
+      const data = await getPartisipasiPublik();
+      if (isMounted) {
+        setDataPartisipasi(data);
+        setLoading(false);
+      }
+    }
+    init();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const stats = useMemo(() => {

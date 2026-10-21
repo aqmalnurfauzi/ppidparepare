@@ -42,7 +42,6 @@ export default function ManajemenBerita() {
   });
 
   const loadData = async () => {
-    setLoading(true);
     const data = await getBerita();
     setBeritaData(data.map((b:any) => ({
       ...b,
@@ -53,7 +52,22 @@ export default function ManajemenBerita() {
   };
 
   useEffect(() => {
-    loadData();
+    let isMounted = true;
+    async function init() {
+      const data = await getBerita();
+      if (isMounted) {
+        setBeritaData(data.map((b:any) => ({
+          ...b,
+          status: b.status || 'Published', 
+          views: b.views || 0
+        })));
+        setLoading(false);
+      }
+    }
+    init();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Filtering Logic
@@ -76,16 +90,11 @@ export default function ManajemenBerita() {
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
   const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
+    const start = (safeCurrentPage - 1) * itemsPerPage;
     return filteredData.slice(start, start + itemsPerPage);
-  }, [filteredData, currentPage]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [totalPages, currentPage]);
+  }, [filteredData, safeCurrentPage]);
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus berita ini?')) {
@@ -386,18 +395,18 @@ export default function ManajemenBerita() {
           <span>Menampilkan {paginatedData.length} dari {filteredData.length} berita</span>
           <div className="flex gap-1">
             <button 
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => Math.max(1, Math.min(p, totalPages) - 1))}
+              disabled={safeCurrentPage === 1}
               className="px-3 py-1 border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
             >
               Sebelumnya
             </button>
             <button className="px-3 py-1 border border-slate-200 dark:border-slate-700 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-medium">
-              {currentPage}
+              {safeCurrentPage}
             </button>
             <button 
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, Math.min(p, totalPages) + 1))}
+              disabled={safeCurrentPage === totalPages || totalPages === 0}
               className="px-3 py-1 border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
             >
               Selanjutnya
