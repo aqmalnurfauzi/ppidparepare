@@ -84,6 +84,34 @@ export interface PermohonanPublicTrackingDTO {
   tanggal_pengajuan: string;
   tanggal_pembaruan: string;
   nama_pemohon_masked: string;
+  kebutuhan?: string | null;
+  tanggapan?: string | null;
+}
+
+export interface SafePublicTrackingResult {
+  success: boolean;
+  type?: 'permohonan' | 'keberatan';
+  data?: {
+    id?: string;
+    nomor_permohonan: string;
+    status_proses: string;
+    status: string;
+    decision?: string | null;
+    alasan_penolakan?: string | null;
+    tanggal_pengajuan: string;
+    tanggal: string;
+    nama_pemohon_masked: string;
+    kebutuhan?: string | null;
+    tanggapan?: string | null;
+    dokumen_jawaban?: Array<{
+      id: string;
+      nama_dokumen: string;
+      download_url: string;
+      file_size_bytes?: number;
+      created_at?: string;
+    }>;
+  };
+  error?: string;
 }
 
 /**
@@ -139,8 +167,9 @@ export const FORBIDDEN_USER_COLUMNS = [
  */
 export function maskApplicantName(fullName: string): string {
   if (!fullName || typeof fullName !== 'string') return '***';
-  return fullName
-    .trim()
+  const clean = fullName.trim();
+  if (!clean) return '***';
+  return clean
     .split(/\s+/)
     .map(word => {
       if (word.length <= 1) return word;

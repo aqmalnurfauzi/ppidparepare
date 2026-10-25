@@ -50,14 +50,24 @@ export default function SurveiKepuasanAdminPage() {
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
 
   const loadData = async () => {
-    setLoading(true);
     const data = await getSurveiKepuasan();
     setDataSurvei(data);
     setLoading(false);
   };
 
   useEffect(() => {
-    loadData();
+    let isMounted = true;
+    async function init() {
+      const data = await getSurveiKepuasan();
+      if (isMounted) {
+        setDataSurvei(data);
+        setLoading(false);
+      }
+    }
+    init();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Perhitungan IKM (Indeks Kepuasan Masyarakat) berdasarkan PermenPAN-RB No 14/2017
@@ -132,7 +142,7 @@ export default function SurveiKepuasanAdminPage() {
         setIsModalOpen(false);
       }
     } else {
-      alert('Gagal menghapus data survei');
+      alert(res?.error || 'Gagal menghapus data survei');
     }
     setIsDeleting(null);
   };
@@ -400,7 +410,7 @@ export default function SurveiKepuasanAdminPage() {
                       </span>
                     </div>
                     <p className="text-sm text-slate-700 dark:text-slate-200 font-medium italic leading-relaxed">
-                      "{item.kritik_saran}"
+                      &ldquo;{item.kritik_saran}&rdquo;
                     </p>
                   </div>
 
@@ -497,7 +507,7 @@ export default function SurveiKepuasanAdminPage() {
                     Kritik & Saran Perbaikan
                   </h4>
                   <div className="p-4 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-slate-800 dark:text-slate-200 text-xs italic leading-relaxed">
-                    "{selectedItem.kritik_saran}"
+                    &ldquo;{selectedItem.kritik_saran}&rdquo;
                   </div>
                 </div>
               )}

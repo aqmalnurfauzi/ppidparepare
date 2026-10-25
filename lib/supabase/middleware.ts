@@ -37,12 +37,11 @@ export async function updateSession(request: NextRequest) {
   // 2. Classify Route Types
   const isAuthRoute = ['/login', '/register', '/forgot-password'].some(route => pathname.startsWith(route));
   const isProtectedAdminRoute = pathname.startsWith('/dashboard');
-  const isProtectedUserRoute = ['/profil', '/ajukan-permohonan', '/pengajuan-keberatan'].some(route => pathname.startsWith(route));
 
   // 3. Early Route Guard
   if (!user) {
-    // Unauthenticated trying to access protected routes -> redirect to login
-    if (isProtectedAdminRoute || isProtectedUserRoute) {
+    // Unauthenticated trying to access admin dashboard -> redirect to login
+    if (isProtectedAdminRoute) {
       const redirectUrl = new URL('/login', request.url);
       redirectUrl.searchParams.set('next', pathname);
       return NextResponse.redirect(redirectUrl);
@@ -64,24 +63,19 @@ export async function updateSession(request: NextRequest) {
   const role = profile?.role ?? 'user';
 
   // Handle deactivated users
-  if (!isActive && (isProtectedAdminRoute || isProtectedUserRoute)) {
+  if (!isActive && isProtectedAdminRoute) {
     const errorUrl = new URL('/login', request.url);
     errorUrl.searchParams.set('error', 'account_disabled');
     return NextResponse.redirect(errorUrl);
   }
 
-  // Prevent logged-in users from accessing Auth routes
+  // Prevent logged-in admin users from accessing Auth routes
   if (isAuthRoute && isActive) {
-    const redirectUrl = new URL(role === 'admin' ? '/dashboard' : '/profil', request.url);
+    const redirectUrl = new URL('/dashboard', request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Email verification check (for user private actions, not strictly dashboard admin, but can apply everywhere)
-  if (!user.email_confirmed_at && isProtectedUserRoute && pathname !== '/verify-email') {
-    return NextResponse.redirect(new URL('/verify-email', request.url));
-  }
-
-  // Admin boundaries
+  // Admin boundaries: non-admin trying to access dashboard -> redirect to home
   if (isProtectedAdminRoute && role !== 'admin') {
     return NextResponse.redirect(new URL('/', request.url)); // Forbidden
   }

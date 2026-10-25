@@ -11,6 +11,7 @@ export const KeberatanStatusSchema = z.enum(['diajukan', 'diproses', 'selesai'],
 
 export const CreateKeberatanSchema = z.object({
   permohonanId: PermohonanIdSchema,
+  trackingToken: z.string().trim().optional().nullable(),
   alasanKeberatan: z
     .string({ error: 'Alasan keberatan wajib diisi' })
     .trim()

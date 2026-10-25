@@ -46,7 +46,7 @@ export default function PengaturanPage() {
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
     } else {
-      alert('Gagal menyimpan pengaturan');
+      alert(res?.error || 'Gagal menyimpan pengaturan');
     }
     setIsSaving(false);
   };

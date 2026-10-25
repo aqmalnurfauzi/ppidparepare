@@ -46,8 +46,8 @@ export default function AdminLogin() {
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm p-2">
                 <img src="/logo-kemenag.png" alt="Logo Kemenag" className="w-full h-full object-contain" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-1">PPID Login Portal</h2>
-              <p className="text-emerald-100 dark:text-slate-400 text-sm">Silakan login untuk mengelola informasi atau permohonan</p>
+              <h2 className="text-2xl font-bold text-white mb-1">Portal Petugas & Admin PPID</h2>
+              <p className="text-emerald-100 dark:text-slate-400 text-sm">Khusus Administrator & Petugas Pengelola Informasi PPID</p>
             </div>
           </div>
 
@@ -124,19 +124,33 @@ export default function AdminLogin() {
                   </>
                 ) : (
                   <>
-                    Masuk
+                    Masuk Portal Petugas
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </button>
 
-              <div className="text-center mt-4">
-                <p className="text-xs text-slate-600 dark:text-slate-400">
-                  Belum punya akun?{' '}
-                  <a href="/register" className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
-                    Daftar di sini
-                  </a>
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-center space-y-2">
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Warga / Pemohon Informasi Publik?
                 </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Anda tidak perlu masuk akun untuk mengajukan permohonan atau melacak status berkas laporan.
+                </p>
+                <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
+                  <a
+                    href="/ajukan-permohonan"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold hover:bg-emerald-100 transition-colors"
+                  >
+                    Daftar Permohonan Baru
+                  </a>
+                  <a
+                    href="/cek-status"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-200 transition-colors"
+                  >
+                    Cek Status & Unduh Berkas
+                  </a>
+                </div>
               </div>
             </form>
           </div>

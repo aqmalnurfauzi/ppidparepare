@@ -38,14 +38,24 @@ export default function PartisipasiPage() {
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
 
   const loadData = async () => {
-    setLoading(true);
     const data = await getPartisipasiPublik();
     setDataPartisipasi(data);
     setLoading(false);
   };
 
   useEffect(() => {
-    loadData();
+    let isMounted = true;
+    async function init() {
+      const data = await getPartisipasiPublik();
+      if (isMounted) {
+        setDataPartisipasi(data);
+        setLoading(false);
+      }
+    }
+    init();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const stats = useMemo(() => {
@@ -91,7 +101,7 @@ export default function PartisipasiPage() {
       setSelectedItem((prev: any) => ({ ...prev, status, tanggapan }));
       alert(`Status berhasil diperbarui menjadi ${status}`);
     } else {
-      alert('Gagal mengubah status');
+      alert(res?.error || 'Gagal mengubah status');
     }
     setIsSaving(false);
   };
@@ -106,7 +116,7 @@ export default function PartisipasiPage() {
         setIsModalOpen(false);
       }
     } else {
-      alert('Gagal menghapus data');
+      alert(res?.error || 'Gagal menghapus data');
     }
     setIsDeleting(null);
   };

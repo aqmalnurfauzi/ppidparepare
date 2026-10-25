@@ -11,6 +11,7 @@
  */
 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10,485,760 bytes (10 MB)
+export const PRIVATE_STORAGE_BUCKET = 'permohonan-dokumen';
 
 export const ALLOWED_MIME_TYPES = [
   'application/pdf',

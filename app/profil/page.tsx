@@ -156,7 +156,7 @@ export default function ProfilPage() {
                     Visi
                   </span>
                   <h3 className="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white leading-tight">
-                    "{visiText}"
+                    &ldquo;{visiText}&rdquo;
                   </h3>
                 </div>
 

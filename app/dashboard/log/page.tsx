@@ -14,19 +14,17 @@ export default function LogAktivitasPage() {
   useEffect(() => {
     async function loadData() {
       const data = await getLogAktivitas();
-      setDataLog(data.map((item: any) => ({
-        ...item,
-        user: item.user_name // map DB column to UI
-      })));
+      setDataLog(data || []);
       setLoading(false);
     }
     loadData();
   }, []);
 
   const filteredData = dataLog.filter(item => 
-    item.user.toLowerCase().includes(search.toLowerCase()) || 
-    item.aksi.toLowerCase().includes(search.toLowerCase()) ||
-    item.ip_address?.toLowerCase().includes(search.toLowerCase())
+    (item.user || '').toLowerCase().includes(search.toLowerCase()) || 
+    (item.aksi || '').toLowerCase().includes(search.toLowerCase()) ||
+    (item.detail || '').toLowerCase().includes(search.toLowerCase()) ||
+    (item.ip_address || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const handleExport = () => {

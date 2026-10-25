@@ -102,16 +102,12 @@ export default function PPIDKemenagPage() {
     });
   }, [dataInformasiPublik, searchQuery, activeCategory, yearFilter, fileTypeFilter]);
 
-  // Reset to page 1 when any filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, activeCategory, yearFilter, fileTypeFilter]);
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
   const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const startIndex = (safeCurrentPage - 1) * itemsPerPage;
     return filteredData.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredData, currentPage, itemsPerPage]);
+  }, [filteredData, safeCurrentPage, itemsPerPage]);
 
   const handleCheckStatus = async () => {
     if (!ticketQuery) return;
@@ -257,7 +253,7 @@ export default function PPIDKemenagPage() {
               return (
                 <button
                   key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
+                  onClick={() => { setActiveCategory(cat.id); setCurrentPage(1); }}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
                     isActive 
                       ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200 dark:shadow-none' 
@@ -277,7 +273,7 @@ export default function PPIDKemenagPage() {
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tahun:</span>
               <select 
                 value={yearFilter}
-                onChange={(e) => setYearFilter(e.target.value)}
+                onChange={(e) => { setYearFilter(e.target.value); setCurrentPage(1); }}
                 className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
               >
                 <option value="Semua">Semua Tahun</option>
@@ -291,7 +287,7 @@ export default function PPIDKemenagPage() {
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tipe File:</span>
               <select 
                 value={fileTypeFilter}
-                onChange={(e) => setFileTypeFilter(e.target.value)}
+                onChange={(e) => { setFileTypeFilter(e.target.value); setCurrentPage(1); }}
                 className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
               >
                 <option value="Semua">Semua Tipe</option>
@@ -303,7 +299,7 @@ export default function PPIDKemenagPage() {
             
             {(yearFilter !== 'Semua' || fileTypeFilter !== 'Semua') && (
               <button 
-                onClick={() => {setYearFilter('Semua'); setFileTypeFilter('Semua');}}
+                onClick={() => {setYearFilter('Semua'); setFileTypeFilter('Semua'); setCurrentPage(1);}}
                 className="text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-wider underline underline-offset-4"
               >
                 Reset Filter
@@ -472,7 +468,7 @@ export default function PPIDKemenagPage() {
                   <p className="text-xl font-bold text-slate-800 dark:text-white mb-2">Informasi Tidak Ditemukan</p>
                   <p className="text-slate-500">Kami tidak dapat menemukan dokumen dengan kriteria tersebut. Silakan coba kata kunci lain.</p>
                   <button 
-                    onClick={() => {setSearchQuery(''); setActiveCategory('Semua'); setYearFilter('Semua'); setFileTypeFilter('Semua');}}
+                    onClick={() => {setSearchQuery(''); setActiveCategory('Semua'); setYearFilter('Semua'); setFileTypeFilter('Semua'); setCurrentPage(1);}}
                     className="mt-8 text-emerald-600 dark:text-emerald-400 font-semibold hover:text-emerald-700 dark:hover:text-emerald-300 underline underline-offset-4"
                   >
                     Reset Semua Filter
@@ -487,7 +483,7 @@ export default function PPIDKemenagPage() {
             <div className="mt-12 flex justify-center items-center gap-2">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
+                disabled={safeCurrentPage === 1}
                 className="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white dark:hover:bg-slate-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-800 text-slate-600 dark:text-slate-400"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -502,7 +498,7 @@ export default function PPIDKemenagPage() {
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`w-10 h-10 rounded-lg text-sm font-bold transition-all ${
-                        currentPage === page 
+                        safeCurrentPage === page 
                           ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200 dark:shadow-none' 
                           : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
@@ -515,7 +511,7 @@ export default function PPIDKemenagPage() {
 
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
+                disabled={safeCurrentPage === totalPages}
                 className="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white dark:hover:bg-slate-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-800 text-slate-600 dark:text-slate-400"
               >
                 <span className="hidden sm:inline">Berikutnya</span>
@@ -546,7 +542,7 @@ export default function PPIDKemenagPage() {
                 <div className="flex gap-2">
                   <input 
                     type="text" 
-                    placeholder="Masukkan ID Tiket..." 
+                    placeholder="Nomor Registrasi (contoh: PPID-2026-00001)..." 
                     value={ticketQuery}
                     onChange={(e) => setTicketQuery(e.target.value)}
                     className="flex-grow bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 dark:text-white"
@@ -593,7 +589,10 @@ export default function PPIDKemenagPage() {
                           </div>
                         </div>
                       )}
-                      <Link href="/cek-status" className="mt-3 block text-center text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 underline underline-offset-2">
+                      <Link 
+                        href={ticketQuery ? `/cek-status?tiket=${encodeURIComponent(ticketQuery.trim())}` : '/cek-status'} 
+                        className="mt-3 block text-center text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 underline underline-offset-2 cursor-pointer"
+                      >
                         Lihat Riwayat & Detail Lengkap
                       </Link>
                     </motion.div>

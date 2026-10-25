@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Kontak() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     sender: '',
@@ -25,20 +26,20 @@ export default function Kontak() {
     e.preventDefault();
     setLoading(true);
     setSuccess(false);
+    setErrorMsg(null);
 
     try {
       const { submitPesan } = await import('@/lib/actions');
       const res = await submitPesan(form);
       if (res.success) {
         setSuccess(true);
-        alert("Pesan berhasil dikirim!");
         setForm({ sender: '', email: '', subject: '', snippet: '' });
       } else {
-        alert("Gagal mengirim pesan.");
+        setErrorMsg('Gagal mengirim pesan. Silakan coba beberapa saat lagi.');
       }
     } catch (error) {
       console.error(error);
-      alert("Terjadi kesalahan sistem.");
+      setErrorMsg('Terjadi kesalahan sistem saat mengirim pesan.');
     } finally {
       setLoading(false);
     }
@@ -133,6 +134,18 @@ export default function Kontak() {
               className="bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 p-8"
             >
               <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-6">Kirim Pesan</h2>
+              {success && (
+                <div className="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center gap-3 text-emerald-800 dark:text-emerald-300">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <p className="text-sm font-medium">Pesan Anda berhasil dikirim! Petugas kami akan segera menindaklanjuti.</p>
+                </div>
+              )}
+              {errorMsg && (
+                <div className="mb-6 p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-center gap-3 text-rose-800 dark:text-rose-300">
+                  <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                  <p className="text-sm font-medium">{errorMsg}</p>
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-6">
                 
                 <div className="grid sm:grid-cols-2 gap-6">

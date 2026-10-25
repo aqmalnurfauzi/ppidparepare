@@ -3,7 +3,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Plus, Search, Edit, Trash2, Eye, X, Save, Loader2, 
-  Upload, CheckCircle, Bold, Italic, List, Sparkles, FileText
+  Upload, CheckCircle, Bold, Italic, List, Sparkles, FileText,
+  AlertCircle, CheckCircle2
 } from 'lucide-react';
 import { getBerita, createBerita, updateBerita, deleteBerita } from '@/lib/actions';
 import { uploadToSupabaseStorage } from '@/lib/storage';
@@ -13,6 +14,10 @@ import { RenderFormattedContent } from '@/components/RenderFormattedContent';
 export default function ManajemenBerita() {
   const [beritaData, setBeritaData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [deleteConfirmBerita, setDeleteConfirmBerita] = useState<any | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Filtering & Pagination State
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,7 +47,6 @@ export default function ManajemenBerita() {
   });
 
   const loadData = async () => {
-    setLoading(true);
     const data = await getBerita();
     setBeritaData(data.map((b:any) => ({
       ...b,
@@ -53,7 +57,22 @@ export default function ManajemenBerita() {
   };
 
   useEffect(() => {
-    loadData();
+    let isMounted = true;
+    async function init() {
+      const data = await getBerita();
+      if (isMounted) {
+        setBeritaData(data.map((b:any) => ({
+          ...b,
+          status: b.status || 'Published', 
+          views: b.views || 0
+        })));
+        setLoading(false);
+      }
+    }
+    init();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Filtering Logic
@@ -76,31 +95,33 @@ export default function ManajemenBerita() {
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
   const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
+    const start = (safeCurrentPage - 1) * itemsPerPage;
     return filteredData.slice(start, start + itemsPerPage);
-  }, [filteredData, currentPage]);
+  }, [filteredData, safeCurrentPage]);
 
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
+  const executeDelete = async () => {
+    if (!deleteConfirmBerita) return;
+    setIsDeleting(true);
+    setActionFeedback(null);
+    const res = await deleteBerita(deleteConfirmBerita.id);
+    if (res.success) {
+      setBeritaData(prev => prev.filter(b => b.id !== deleteConfirmBerita.id));
+      setActionFeedback({ type: 'success', message: 'Berita berhasil dihapus.' });
+      setDeleteConfirmBerita(null);
+    } else {
+      setActionFeedback({ type: 'error', message: res.error || 'Gagal menghapus berita.' });
+      setDeleteConfirmBerita(null);
     }
-  }, [totalPages, currentPage]);
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus berita ini?')) {
-      const res = await deleteBerita(id);
-      if (res.success) {
-        setBeritaData(prev => prev.filter(b => b.id !== id));
-      } else {
-        alert('Gagal menghapus berita.');
-      }
-    }
+    setIsDeleting(false);
   };
 
   const handleOpenModal = (mode: 'add'|'edit', item: any = null) => {
     setModalMode(mode);
     setUploadNote(null);
+    setFormError(null);
+    setActionFeedback(null);
     setActiveTab('write');
     if (mode === 'edit' && item) {
       setSelectedBerita(item);
@@ -131,7 +152,7 @@ export default function ManajemenBerita() {
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
-      alert('Ukuran gambar maksimal 10 MB.');
+      setUploadNote('Error: Ukuran gambar melebihi batas maksimal 10 MB.');
       return;
     }
 
@@ -148,12 +169,10 @@ export default function ManajemenBerita() {
           setUploadNote('Gambar berhasil diunggah ke cloud storage.');
         }
       } else {
-        alert('Gagal mengunggah gambar: ' + (res.error || 'Terjadi kesalahan'));
-        setUploadNote(null);
+        setUploadNote('Error: Gagal mengunggah gambar: ' + (res.error || 'Terjadi kesalahan'));
       }
     } catch (err: any) {
-      alert('Gagal memproses file gambar: ' + (err.message || 'Error'));
-      setUploadNote(null);
+      setUploadNote('Error: Gagal memproses file gambar: ' + (err.message || 'Error'));
     } finally {
       setIsUploadingImage(false);
     }
@@ -198,14 +217,15 @@ export default function ManajemenBerita() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      alert('Judul berita tidak boleh kosong.');
+      setFormError('Judul berita tidak boleh kosong.');
       return;
     }
     if (!formData.content.trim()) {
-      alert('Isi berita tidak boleh kosong.');
+      setFormError('Isi berita tidak boleh kosong.');
       return;
     }
 
+    setFormError(null);
     setIsSaving(true);
 
     // Normalisasi isi berita jika mengandung tag <p> manual
@@ -243,8 +263,9 @@ export default function ManajemenBerita() {
       if (res.success) {
         await loadData();
         setIsModalOpen(false);
+        setActionFeedback({ type: 'success', message: 'Berita baru berhasil diterbitkan!' });
       } else {
-        alert('Gagal menambah berita: ' + (res.error || 'Periksa koneksi database.'));
+        setFormError(res.error || 'Gagal menambah berita. Periksa hak akses administrator.');
       }
     } else {
       const res = await updateBerita(selectedBerita.id, {
@@ -254,8 +275,9 @@ export default function ManajemenBerita() {
       if (res.success) {
         await loadData();
         setIsModalOpen(false);
+        setActionFeedback({ type: 'success', message: 'Berita berhasil diperbarui!' });
       } else {
-        alert('Gagal mengubah berita: ' + (res.error || 'Periksa koneksi database.'));
+        setFormError(res.error || 'Gagal mengubah berita. Periksa hak akses administrator.');
       }
     }
     setIsSaving(false);
@@ -277,6 +299,21 @@ export default function ManajemenBerita() {
           <span>Tambah Berita</span>
         </button>
       </div>
+
+      {actionFeedback && (
+        <div className={`p-4 rounded-xl flex items-center gap-3 border ${
+          actionFeedback.type === 'success'
+            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+            : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+        }`}>
+          {actionFeedback.type === 'success' ? (
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          ) : (
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+          )}
+          <p className="text-sm font-medium">{actionFeedback.message}</p>
+        </div>
+      )}
 
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
@@ -365,7 +402,7 @@ export default function ManajemenBerita() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button 
-                          onClick={() => handleDelete(item.id)}
+                          onClick={() => setDeleteConfirmBerita(item)}
                           className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
                           title="Hapus Berita"
                         >
@@ -386,18 +423,18 @@ export default function ManajemenBerita() {
           <span>Menampilkan {paginatedData.length} dari {filteredData.length} berita</span>
           <div className="flex gap-1">
             <button 
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => Math.max(1, Math.min(p, totalPages) - 1))}
+              disabled={safeCurrentPage === 1}
               className="px-3 py-1 border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
             >
               Sebelumnya
             </button>
             <button className="px-3 py-1 border border-slate-200 dark:border-slate-700 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-medium">
-              {currentPage}
+              {safeCurrentPage}
             </button>
             <button 
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, Math.min(p, totalPages) + 1))}
+              disabled={safeCurrentPage === totalPages || totalPages === 0}
               className="px-3 py-1 border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
             >
               Selanjutnya
@@ -425,6 +462,12 @@ export default function ManajemenBerita() {
             
             <div className="p-5 overflow-y-auto flex-1 space-y-4">
               <form id="beritaForm" onSubmit={handleSubmit} className="space-y-4">
+                {formError && (
+                  <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl flex items-center gap-2 text-xs text-rose-700 dark:text-rose-300">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                    <span>{formError}</span>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Judul Berita <span className="text-rose-500">*</span>
@@ -679,6 +722,45 @@ export default function ManajemenBerita() {
               >
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 <span>{isSaving ? 'Menyimpan...' : 'Simpan Berita'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus Berita */}
+      {deleteConfirmBerita && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/40 rounded-xl">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Konfirmasi Hapus</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Tindakan ini tidak dapat dibatalkan</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              Apakah Anda yakin ingin menghapus berita <strong className="text-slate-900 dark:text-white">&quot;{deleteConfirmBerita.title}&quot;</strong>?
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button 
+                type="button"
+                onClick={() => setDeleteConfirmBerita(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl font-medium transition-colors text-sm"
+              >
+                Batal
+              </button>
+              <button 
+                type="button"
+                onClick={executeDelete}
+                disabled={isDeleting}
+                className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-medium transition-colors text-sm disabled:opacity-70"
+              >
+                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                <span>{isDeleting ? 'Menghapus...' : 'Ya, Hapus'}</span>
               </button>
             </div>
           </div>

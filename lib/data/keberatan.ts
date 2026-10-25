@@ -2,6 +2,7 @@ import 'server-only';
 
 import { requireAuth, requireAdmin, AuthError } from '@/lib/auth/session';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { verifyTrackingToken } from '@/lib/tracking/token';
 import {
   KEBERATAN_USER_PROJECTION,
   KEBERATAN_ADMIN_PROJECTION,
@@ -34,12 +35,28 @@ export async function createKeberatan(
 ): Promise<{ success: boolean; data?: KeberatanUserDTO; error?: string }> {
   try {
     const input: CreateKeberatanInput = CreateKeberatanSchema.parse(rawInput);
-    const { user, profile, supabase } = await requireAuth();
+    let user: any = null;
+    let profile: any = null;
+    let clientToUse: any = null;
+
+    try {
+      const auth = await requireAuth();
+      user = auth.user;
+      profile = auth.profile;
+      clientToUse = auth.supabase;
+    } catch {
+      // Unauthenticated / Guest citizen flow (Layanan Pengajuan Keberatan Informasi Publik Terbuka)
+      user = null;
+      profile = { role: 'user', id: 'guest-applicant' };
+      clientToUse = createAdminClient();
+    }
+
+    const adminClient = createAdminClient();
 
     // 1. Verify existence, ownership, and terminal status of target permohonan
-    const { data: permohonan, error: permohonanError } = await supabase
+    const { data: permohonan, error: permohonanError } = await adminClient
       .from('permohonan')
-      .select('id, pemohon_id, status_proses, nomor_permohonan')
+      .select('id, pemohon_id, status_proses, nomor_permohonan, tracking_token_hash')
       .eq('id', input.permohonanId)
       .maybeSingle();
 
@@ -47,8 +64,25 @@ export async function createKeberatan(
       return { success: false, error: 'Permohonan tidak ditemukan.' };
     }
 
-    if (profile.role !== 'admin' && permohonan.pemohon_id !== user.id) {
+    if (user && profile.role !== 'admin' && permohonan.pemohon_id !== user.id) {
       return { success: false, error: 'Akses ditolak: Anda bukan pemilik permohonan ini.' };
+    }
+
+    // Unauthenticated guest applicant verification: require valid tracking token
+    if (!user) {
+      if (permohonan.tracking_token_hash) {
+        if (!input.trackingToken || !verifyTrackingToken(input.trackingToken, permohonan.tracking_token_hash)) {
+          return {
+            success: false,
+            error: 'Verifikasi kepemilikan permohonan gagal: Token pelacakan permohonan tidak valid atau belum disertakan.',
+          };
+        }
+      } else {
+        return {
+          success: false,
+          error: 'Permohonan ini terdaftar sebelum sistem kode rahasia pelacakan aktif. Silakan masuk dengan akun terdaftar untuk mengajukan keberatan.',
+        };
+      }
     }
 
     if (permohonan.status_proses !== 'selesai') {
@@ -59,7 +93,7 @@ export async function createKeberatan(
     }
 
     // 2. Prevent duplicate open objections
-    const { data: existingOpen, error: existingError } = await supabase
+    const { data: existingOpen, error: existingError } = await adminClient
       .from('keberatan')
       .select('id, status_keberatan')
       .eq('permohonan_id', input.permohonanId)
@@ -73,8 +107,8 @@ export async function createKeberatan(
       };
     }
 
-    // 3. Insert record using caller's client (enforces RLS and column grant)
-    const { data: newKeberatan, error: insertError } = await supabase
+    // 3. Insert record using client (enforces RLS or admin client)
+    const { data: newKeberatan, error: insertError } = await clientToUse
       .from('keberatan')
       .insert({
         permohonan_id: input.permohonanId,
@@ -93,9 +127,8 @@ export async function createKeberatan(
 
     // 4. Record audit trail into log_aktivitas
     try {
-      const adminClient = createAdminClient();
       await adminClient.from('log_aktivitas').insert({
-        actor_id: user.id,
+        actor_id: user ? user.id : permohonan.pemohon_id,
         actor_role: profile.role,
         action: 'keberatan.create',
         target_entity: 'keberatan',

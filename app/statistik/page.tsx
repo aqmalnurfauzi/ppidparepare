@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { BarChart3, Users, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { getPermohonan } from '@/lib/actions';
+import { getPublicStatistik } from '@/lib/actions';
 
 export default function StatistikPage() {
   const [stats, setStats] = useState<any[]>([
@@ -24,31 +24,18 @@ export default function StatistikPage() {
 
   useEffect(() => {
     async function loadData() {
-      const data = await getPermohonan();
-      
-      const total = data.length;
-      const approved = data.filter((d:any) => d.status.toLowerCase() === 'disetujui').length;
-      const processing = data.filter((d:any) => ['pending', 'diproses'].includes(d.status.toLowerCase())).length;
-      const rejected = data.filter((d:any) => d.status.toLowerCase() === 'ditolak').length;
-      
+      const statsData = await getPublicStatistik();
+
       setStats([
-        { label: 'Total Permohonan', value: total.toString(), icon: Users, color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-        { label: 'Permohonan Disetujui', value: approved.toString(), icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
-        { label: 'Sedang Diproses', value: processing.toString(), icon: Clock, color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-        { label: 'Permohonan Ditolak', value: rejected.toString(), icon: XCircle, color: 'text-rose-500', bg: 'bg-rose-100 dark:bg-rose-900/30' },
+        { label: 'Total Permohonan', value: statsData.total.toString(), icon: Users, color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+        { label: 'Permohonan Disetujui', value: statsData.approved.toString(), icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
+        { label: 'Sedang Diproses', value: statsData.processing.toString(), icon: Clock, color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+        { label: 'Permohonan Ditolak', value: statsData.rejected.toString(), icon: XCircle, color: 'text-rose-500', bg: 'bg-rose-100 dark:bg-rose-900/30' },
       ]);
 
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
-      const monthlyCounts = new Array(12).fill(0);
-      data.forEach((d: any) => {
-        if (d.tanggal) {
-          const m = new Date(d.tanggal).getMonth();
-          monthlyCounts[m]++;
-        }
-      });
-      const highestCount = Math.max(...monthlyCounts, 10);
+      const highestCount = Math.max(...statsData.monthly.map((m) => m.value), 10);
       setMaxMonthly(highestCount);
-      setMonthlyData(months.map((m, i) => ({ month: m, value: monthlyCounts[i] })));
+      setMonthlyData(statsData.monthly);
     }
     loadData();
   }, []);

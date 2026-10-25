@@ -73,7 +73,7 @@ export default function StandarLayananPage() {
           <ShieldCheck className="w-16 h-16 text-emerald-500 mx-auto mb-6" />
           <h3 className="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white mb-6">Maklumat Pelayanan</h3>
           <blockquote className="text-lg md:text-xl font-medium italic text-slate-700 dark:text-slate-300 leading-relaxed max-w-3xl mx-auto whitespace-pre-line">
-            "{maklumatText}"
+            &ldquo;{maklumatText}&rdquo;
           </blockquote>
         </motion.section>
 
