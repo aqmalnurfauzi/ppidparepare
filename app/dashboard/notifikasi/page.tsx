@@ -41,7 +41,7 @@ export default function PengaturanNotifikasi() {
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
     } else {
-      alert('Gagal menyimpan pengaturan notifikasi');
+      alert(res?.error || 'Gagal menyimpan pengaturan notifikasi');
     }
     setIsSaving(false);
   };

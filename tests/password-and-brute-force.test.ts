@@ -1,13 +1,13 @@
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { validatePassword } from '../lib/auth/password';
+import { validatePassword } from '../lib/auth/password.ts';
 import {
   checkLoginRateLimit,
   recordFailedLogin,
   resetLoginRateLimit,
   _clearRateLimitStore,
   _getAttemptRecord,
-} from '../lib/auth/rate-limit';
+} from '../lib/auth/rate-limit.ts';
 
 describe('Password Policy Revision (Minimum 8 Characters, No Extra Complexity)', () => {
   describe('PASS Cases (Minimum 8 characters)', () => {

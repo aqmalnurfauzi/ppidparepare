@@ -85,18 +85,46 @@ export async function createPermohonanAction(
   rawInput: unknown
 ): Promise<CreatePermohonanResult> {
   try {
-    // 1. Authenticate caller and verify email status
-    const { profile, supabase } = await requireVerifiedUser();
+    let callerSupabase: any;
+    let actorId: string;
+    let actorRole: string;
 
-    // 2. Enforce role invariant (RPC strictly requires role 'user')
-    if (profile.role !== 'user') {
-      return {
-        success: false,
-        error: {
-          code: 'FORBIDDEN',
-          message: 'Hanya akun pemohon (role "user") yang dapat mengajukan permohonan informasi.',
-        },
-      };
+    // 1. Authenticate caller and verify email status if session exists
+    try {
+      const { profile, supabase } = await requireVerifiedUser();
+
+      // Enforce role invariant (RPC strictly requires role 'user')
+      if (profile.role !== 'user') {
+        return {
+          success: false,
+          error: {
+            code: 'FORBIDDEN',
+            message: 'Hanya akun pemohon (role "user") yang dapat mengajukan permohonan informasi.',
+          },
+        };
+      }
+
+      callerSupabase = supabase;
+      actorId = profile.id;
+      actorRole = profile.role;
+    } catch (authErr) {
+      if (authErr instanceof AuthError && authErr.code === 'ACCOUNT_DISABLED') {
+        return {
+          success: false,
+          error: {
+            code: 'ACCOUNT_DISABLED',
+            message: authErr.message,
+          },
+        };
+      }
+
+      // Open registration (Layanan Permohonan Informasi Publik Terbuka PPID):
+      // Guest citizens who do not have an account execute via the public gateway identity.
+      const { getGuestApplicantClient } = await import('@/lib/auth/guest-gateway');
+      const guestAuth = await getGuestApplicantClient();
+      callerSupabase = guestAuth.supabase;
+      actorId = guestAuth.profile.id;
+      actorRole = guestAuth.profile.role;
     }
 
     // 3. Validate input payload against strict Zod schema
@@ -126,8 +154,8 @@ export async function createPermohonanAction(
     const trackingToken = generateTrackingToken();
     const trackingTokenHash = hashTrackingToken(trackingToken);
 
-    // 5. Invoke atomic create_permohonan RPC using request-scoped user client
-    const { data, error } = await supabase.rpc('create_permohonan', {
+    // 5. Invoke atomic create_permohonan RPC using request-scoped user client or guest gateway
+    const { data, error } = await callerSupabase.rpc('create_permohonan', {
       p_nama_pemohon: input.nama_pemohon,
       p_kebutuhan: input.kebutuhan,
       p_kategori_pemohon: input.kategori_pemohon ?? null,
@@ -166,6 +194,22 @@ export async function createPermohonanAction(
           message: 'Respon pembuatan permohonan tidak valid dari database.',
         },
       };
+    }
+
+    // 6. Link uploaded KTP to public.dokumen_permohonan if provided
+    if (input.ktp_storage_path) {
+      try {
+        const { attachKtpDokumen } = await import('@/lib/storage/documents');
+        await attachKtpDokumen({
+          permohonanId: result.id,
+          nomorPermohonan: result.nomor_permohonan,
+          storagePath: input.ktp_storage_path,
+          actorId,
+          actorRole,
+        });
+      } catch (ktpErr) {
+        console.error('[SERVER ACTION] Gagal menautkan KTP ke dokumen_permohonan:', ktpErr);
+      }
     }
 
     return {

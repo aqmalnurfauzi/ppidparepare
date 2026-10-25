@@ -101,7 +101,7 @@ export default function PartisipasiPage() {
       setSelectedItem((prev: any) => ({ ...prev, status, tanggapan }));
       alert(`Status berhasil diperbarui menjadi ${status}`);
     } else {
-      alert('Gagal mengubah status');
+      alert(res?.error || 'Gagal mengubah status');
     }
     setIsSaving(false);
   };
@@ -116,7 +116,7 @@ export default function PartisipasiPage() {
         setIsModalOpen(false);
       }
     } else {
-      alert('Gagal menghapus data');
+      alert(res?.error || 'Gagal menghapus data');
     }
     setIsDeleting(null);
   };

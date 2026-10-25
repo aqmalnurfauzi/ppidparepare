@@ -116,9 +116,10 @@ export const CreatePermohonanInputSchema = z.object({
   telepon: z
     .string()
     .trim()
-    .max(20, 'Nomor telepon maksimal 20 karakter')
+    .regex(/^[0-9+\-\s]{7,20}$/, 'Nomor telepon harus berupa angka yang valid (7-20 digit)')
     .optional()
-    .nullable(),
+    .nullable()
+    .or(z.literal('')),
   email: z
     .string()
     .trim()
@@ -142,6 +143,12 @@ export const CreatePermohonanInputSchema = z.object({
     .string()
     .trim()
     .max(100, 'Cara mendapatkan salinan maksimal 100 karakter')
+    .optional()
+    .nullable(),
+  ktp_storage_path: z
+    .string()
+    .trim()
+    .max(500, 'Path storage KTP maksimal 500 karakter')
     .optional()
     .nullable(),
 });

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { MessageSquare, Search, Filter, Eye, CheckCircle, Clock, XCircle, Loader2, ExternalLink, FileText, Download, MessageCircle, Mail } from 'lucide-react';
+import { MessageSquare, Search, Filter, Eye, CheckCircle, Clock, XCircle, Loader2, ExternalLink, FileText, Download, MessageCircle, Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getPermohonan, updatePermohonanStatus, updatePermohonanInternalNotes } from '@/lib/actions';
 import { CardListSkeleton } from '@/components/ui/card-list-skeleton';
@@ -10,6 +10,7 @@ export default function ManajemenPermohonan() {
   const [selectedItem, setSelectedItem] = React.useState<any>(null);
   const [dataPermohonan, setDataPermohonan] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Filter & Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,30 +46,33 @@ export default function ManajemenPermohonan() {
   const handleOpenDetail = (item: any) => {
     setSelectedItem(item);
     setInternalNote(item.catatan_internal || '');
+    setActionFeedback(null);
   };
 
   const handleSaveNote = async () => {
     if (!selectedItem) return;
     setIsSavingNote(true);
+    setActionFeedback(null);
     const res = await updatePermohonanInternalNotes(selectedItem.id, internalNote);
     if (res.success) {
       setDataPermohonan(prev => prev.map(item => item.id === selectedItem.id ? { ...item, catatan_internal: internalNote } : item));
       setSelectedItem((prev: any) => prev ? { ...prev, catatan_internal: internalNote } : prev);
-      alert('Catatan berhasil disimpan');
+      setActionFeedback({ type: 'success', message: 'Catatan internal berhasil disimpan.' });
     } else {
-      alert('Gagal menyimpan catatan. Pastikan kolom catatan_internal ada di database.');
+      setActionFeedback({ type: 'error', message: res.error || 'Gagal menyimpan catatan internal.' });
     }
     setIsSavingNote(false);
   };
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
+    setActionFeedback(null);
     const res = await updatePermohonanStatus(id, newStatus);
     if (res.success) {
       setDataPermohonan(prev => prev.map(item => item.id === id ? { ...item, status: newStatus } : item));
       setSelectedItem((prev: any) => prev ? { ...prev, status: newStatus } : prev);
-      alert(`Status berhasil diubah menjadi ${newStatus}`);
+      setActionFeedback({ type: 'success', message: `Status permohonan berhasil diubah menjadi ${newStatus}.` });
     } else {
-      alert('Gagal mengubah status');
+      setActionFeedback({ type: 'error', message: res.error || 'Gagal mengubah status permohonan.' });
     }
   };
 
@@ -197,6 +201,20 @@ export default function ManajemenPermohonan() {
             </div>
             
             <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              {actionFeedback && (
+                <div className={`p-4 rounded-xl flex items-center gap-3 border ${
+                  actionFeedback.type === 'success'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                    : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+                }`}>
+                  {actionFeedback.type === 'success' ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                  )}
+                  <p className="text-sm font-medium">{actionFeedback.message}</p>
+                </div>
+              )}
               <div className="grid sm:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                 <div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold mb-1">Nama Pemohon</p>

@@ -542,7 +542,7 @@ export default function PPIDKemenagPage() {
                 <div className="flex gap-2">
                   <input 
                     type="text" 
-                    placeholder="Masukkan ID Tiket..." 
+                    placeholder="Nomor Registrasi (contoh: PPID-2026-00001)..." 
                     value={ticketQuery}
                     onChange={(e) => setTicketQuery(e.target.value)}
                     className="flex-grow bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 dark:text-white"
@@ -589,7 +589,10 @@ export default function PPIDKemenagPage() {
                           </div>
                         </div>
                       )}
-                      <Link href="/cek-status" className="mt-3 block text-center text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 underline underline-offset-2">
+                      <Link 
+                        href={ticketQuery ? `/cek-status?tiket=${encodeURIComponent(ticketQuery.trim())}` : '/cek-status'} 
+                        className="mt-3 block text-center text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 underline underline-offset-2 cursor-pointer"
+                      >
                         Lihat Riwayat & Detail Lengkap
                       </Link>
                     </motion.div>

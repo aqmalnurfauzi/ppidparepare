@@ -314,3 +314,34 @@ export async function listDokumenPermohonan(permohonanId: string): Promise<Dokum
 
   return (docs || []) as unknown as DokumenDTO[];
 }
+
+/**
+ * Attach an uploaded KTP file to a permohonan record.
+ * Used by createPermohonanAction to link citizen identity document.
+ */
+export async function attachKtpDokumen(params: {
+  permohonanId: string;
+  nomorPermohonan: string;
+  storagePath: string;
+  actorId: string;
+  actorRole: string;
+}): Promise<void> {
+  const adminClient = createAdminClient();
+  const ext = params.storagePath.split('.').pop() || 'jpg';
+  const mimeType = ext === 'pdf' ? 'application/pdf' : ext === 'png' ? 'image/png' : 'image/jpeg';
+  const fileId = crypto.randomUUID();
+
+  const { error } = await adminClient.from('dokumen_permohonan').insert({
+    id: fileId,
+    permohonan_id: params.permohonanId,
+    kategori_dokumen: 'identitas_ktp',
+    storage_path: params.storagePath,
+    original_filename: `KTP_${params.nomorPermohonan}.${ext}`,
+    mime_type: mimeType,
+    file_size_bytes: 1048576,
+  });
+
+  if (error) {
+    console.error('[ATTACH KTP ERROR] Gagal menautkan KTP ke dokumen_permohonan:', error);
+  }
+}

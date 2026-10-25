@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { ShieldAlert, Search, Eye, CheckCircle, XCircle, X, Loader2 } from 'lucide-react';
+import { ShieldAlert, Search, Eye, CheckCircle, XCircle, X, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getKeberatan, updateKeberatanStatus } from '@/lib/actions';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
@@ -9,6 +9,7 @@ import { TableSkeleton } from '@/components/ui/table-skeleton';
 export default function KeberatanPage() {
   const [dataKeberatan, setDataKeberatan] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Filter & Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,19 +47,21 @@ export default function KeberatanPage() {
   const handleOpenDetail = (item: any) => {
     setSelectedItem(item);
     setTanggapan(item.tanggapan || '');
+    setActionFeedback(null);
     setIsModalOpen(true);
   };
 
   const handleUpdateStatus = async (status: string) => {
     if (!selectedItem) return;
     setIsSaving(true);
+    setActionFeedback(null);
     const res = await updateKeberatanStatus(selectedItem.id, status, tanggapan);
     if (res.success) {
       setDataKeberatan(prev => prev.map(item => item.id === selectedItem.id ? { ...item, status, tanggapan } : item));
       setIsModalOpen(false);
-      alert(`Status berhasil diubah menjadi ${status}`);
+      setActionFeedback({ type: 'success', message: `Status keberatan berhasil diubah menjadi ${status}.` });
     } else {
-      alert('Gagal mengubah status');
+      setActionFeedback({ type: 'error', message: res.error || 'Gagal mengubah status keberatan.' });
     }
     setIsSaving(false);
   };
@@ -66,16 +69,17 @@ export default function KeberatanPage() {
 
   const getStatusBadge = (status: string) => {
     switch(status) {
+      case 'diajukan':
       case 'menunggu':
-        return <span className="px-2.5 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-md text-xs font-bold">Menunggu</span>;
+        return <span className="px-2.5 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-md text-xs font-bold border border-blue-200 dark:border-blue-800/50">Diajukan</span>;
       case 'diproses':
-        return <span className="px-2.5 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-md text-xs font-bold">Diproses</span>;
+        return <span className="px-2.5 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-md text-xs font-bold border border-amber-200 dark:border-amber-800/50">Diproses</span>;
       case 'selesai':
-        return <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-md text-xs font-bold">Selesai</span>;
+        return <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-md text-xs font-bold border border-emerald-200 dark:border-emerald-800/50">Selesai</span>;
       case 'ditolak':
-        return <span className="px-2.5 py-1 bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 rounded-md text-xs font-bold">Ditolak</span>;
+        return <span className="px-2.5 py-1 bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 rounded-md text-xs font-bold border border-rose-200 dark:border-rose-800/50">Ditolak</span>;
       default:
-        return null;
+        return <span className="px-2.5 py-1 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 rounded-md text-xs font-bold">{status}</span>;
     }
   };
 
@@ -88,6 +92,21 @@ export default function KeberatanPage() {
           <p className="text-slate-500 dark:text-slate-400">Tinjau dan kelola pengajuan keberatan dari pemohon informasi.</p>
         </div>
       </div>
+
+      {actionFeedback && (
+        <div className={`p-4 rounded-xl flex items-center gap-3 border ${
+          actionFeedback.type === 'success'
+            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+            : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+        }`}>
+          {actionFeedback.type === 'success' ? (
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          ) : (
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+          )}
+          <p className="text-sm font-medium">{actionFeedback.message}</p>
+        </div>
+      )}
 
       {/* Filter/Search Bar */}
       <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
@@ -108,7 +127,7 @@ export default function KeberatanPage() {
             className="flex-1 sm:w-auto px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-slate-900 dark:text-white"
           >
             <option value="">Semua Status</option>
-            <option value="menunggu">Menunggu</option>
+            <option value="diajukan">Diajukan</option>
             <option value="diproses">Diproses</option>
             <option value="selesai">Selesai</option>
             <option value="ditolak">Ditolak</option>
@@ -155,8 +174,8 @@ export default function KeberatanPage() {
                           <ShieldAlert className="w-5 h-5" />
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900 dark:text-white">{item.id}</div>
-                          <div className="text-xs text-slate-500 mt-0.5">Ref: {item.tiket_referensi} • {item.nama_pemohon}</div>
+                          <div className="font-bold text-slate-900 dark:text-white font-mono">{item.nomor_keberatan || item.id}</div>
+                          <div className="text-xs text-slate-500 mt-0.5">Ref: {item.nomor_permohonan || item.tiket_referensi || '-'} • {item.nama_pemohon || item.nama || '-'}</div>
                         </div>
                       </div>
                     </td>
@@ -198,16 +217,16 @@ export default function KeberatanPage() {
             <div className="p-4 overflow-y-auto flex-1 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-slate-500">ID Keberatan</p>
-                  <p className="font-semibold">{selectedItem.id}</p>
+                  <p className="text-sm text-slate-500">ID / Nomor Keberatan</p>
+                  <p className="font-semibold text-slate-900 dark:text-white font-mono">{selectedItem.nomor_keberatan || selectedItem.id}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">Tiket Referensi</p>
-                  <p className="font-semibold">{selectedItem.tiket_referensi}</p>
+                  <p className="text-sm text-slate-500">Tiket Permohonan</p>
+                  <p className="font-semibold text-slate-900 dark:text-white font-mono">{selectedItem.nomor_permohonan || selectedItem.tiket_referensi || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-500">Nama Pemohon</p>
-                  <p className="font-semibold">{selectedItem.nama_pemohon}</p>
+                  <p className="font-semibold text-slate-900 dark:text-white">{selectedItem.nama_pemohon || selectedItem.nama || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-500">Status</p>
@@ -220,6 +239,14 @@ export default function KeberatanPage() {
                   {selectedItem.alasan}
                 </div>
               </div>
+              {selectedItem.kasus_posisi && (
+                <div>
+                  <p className="text-sm text-slate-500">Penjelasan Kasus Posisi</p>
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg mt-1 text-sm text-slate-700 dark:text-slate-300">
+                    {selectedItem.kasus_posisi}
+                  </div>
+                </div>
+              )}
               
               <div>
                 <p className="text-sm font-semibold mb-2">Tanggapan PPID</p>

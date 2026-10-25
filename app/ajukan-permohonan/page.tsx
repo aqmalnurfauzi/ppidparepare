@@ -1,18 +1,39 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { Upload, Send, FileText, CheckCircle2, Loader2, X, AlertCircle } from 'lucide-react';
+import { 
+  Upload, 
+  Send, 
+  FileText, 
+  CheckCircle2, 
+  Loader2, 
+  X, 
+  AlertCircle, 
+  Copy, 
+  Check, 
+  ShieldCheck, 
+  ExternalLink, 
+  LogIn, 
+  AlertTriangle 
+} from 'lucide-react';
 import { submitPermohonan } from '@/lib/actions';
-import { uploadToSupabaseStorage } from '@/lib/storage';
+import { uploadKtpPermohonanAction } from '@/app/actions/dokumen';
+import { createClient } from '@/lib/supabase/client';
 
 export default function AjukanPermohonanPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatusText, setSubmitStatusText] = useState('Mengirim...');
   const [isSuccess, setIsSuccess] = useState(false);
   const [ticketId, setTicketId] = useState('');
+  const [trackingToken, setTrackingToken] = useState('');
+  const [copiedField, setCopiedField] = useState<'ticket' | 'token' | 'all' | null>(null);
+  const [submitError, setSubmitError] = useState<{ code: string; message: string } | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const [fileKtp, setFileKtp] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -31,8 +52,32 @@ export default function AjukanPermohonanPage() {
     tujuan_penggunaan: ''
   });
 
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setIsLoggedIn(true);
+          setUserEmail(user.email ?? null);
+          setForm(prev => ({
+            ...prev,
+            email: prev.email || user.email || '',
+            nama: prev.nama || (user.user_metadata?.full_name ?? ''),
+          }));
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch {
+        setIsLoggedIn(false);
+      }
+    }
+    checkAuth();
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    if (submitError) setSubmitError(null);
   };
 
   const handleFileChange = (file: File) => {
@@ -52,7 +97,7 @@ export default function AjukanPermohonanPage() {
     }
 
     setFileKtp(file);
-    if (file.type.startsWith('image/') || hasValidExt && !file.name.toLowerCase().endsWith('.pdf')) {
+    if (file.type.startsWith('image/') || (hasValidExt && !file.name.toLowerCase().endsWith('.pdf'))) {
       const objUrl = URL.createObjectURL(file);
       setPreviewUrl(objUrl);
     } else {
@@ -73,6 +118,16 @@ export default function AjukanPermohonanPage() {
     }
   };
 
+  const copyToClipboard = async (text: string, field: 'ticket' | 'token' | 'all') => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2500);
+    } catch {
+      // Fallback
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -84,67 +139,198 @@ export default function AjukanPermohonanPage() {
     }
 
     setIsSubmitting(true);
+    setSubmitError(null);
     setSubmitStatusText('Mengunggah kartu identitas...');
 
-    let fileKtpUrl = '';
+    let fileKtpStoragePath = '';
     try {
-      const uploadRes = await uploadToSupabaseStorage(fileKtp, 'dokumen');
-      if (uploadRes.error || !uploadRes.url) {
+      const fd = new FormData();
+      fd.append('file', fileKtp);
+      const uploadRes = await uploadKtpPermohonanAction(fd);
+      if (!uploadRes.success || !uploadRes.storagePath) {
         setIsSubmitting(false);
-        setFileError(`Gagal mengunggah file: ${uploadRes.error || 'Terjadi kesalahan sistem saat upload.'}`);
+        setFileError(uploadRes.error?.message || 'Gagal mengunggah berkas KTP ke penyimpanan aman.');
         return;
       }
-      fileKtpUrl = uploadRes.url;
+      fileKtpStoragePath = uploadRes.storagePath;
     } catch (uploadErr: any) {
       setIsSubmitting(false);
-      setFileError(`Gagal mengunggah file: ${uploadErr.message || 'Terjadi kesalahan jaringan.'}`);
+      setFileError(uploadErr?.message || 'Terjadi kesalahan jaringan saat mengunggah berkas.');
       return;
     }
 
-    setSubmitStatusText('Menyimpan permohonan...');
+    setSubmitStatusText('Menyimpan permohonan via RPC...');
     const res = await submitPermohonan({
       ...form,
-      file_ktp_url: fileKtpUrl
+      file_ktp_url: fileKtpStoragePath
     });
     setIsSubmitting(false);
     
     if (res.success) {
       setTicketId(res.id || '');
+      setTrackingToken(res.tracking_token || '');
       setIsSuccess(true);
       setFileKtp(null);
       setPreviewUrl(null);
+      setSubmitError(null);
       setForm({
-        kategori_pemohon: '', nik: '', nama: '', alamat: '', telepon: '', email: '', kebutuhan: '', tujuan_penggunaan: ''
+        kategori_pemohon: '', nik: '', nama: '', alamat: '', telepon: '', email: userEmail || '', kebutuhan: '', tujuan_penggunaan: ''
       });
     } else {
       const errObj = res.error as any;
-      alert('Gagal mengirim permohonan: ' + (errObj?.message || 'Terjadi kesalahan saat menyimpan'));
+      setSubmitError({
+        code: errObj?.code || 'INTERNAL_ERROR',
+        message: errObj?.message || 'Terjadi kesalahan sistem saat menyimpan permohonan.',
+      });
+      window.scrollTo({ top: 250, behavior: 'smooth' });
     }
   };
 
   if (isSuccess) {
+    const fullSummaryText = `PPID KEMENTERIAN AGAMA KOTA PAREPARE - BUKTI REGISTRASI PERMOHONAN INFORMASI\nNomor Registrasi Permohonan: ${ticketId}\nKode Rahasia Pelacakan: ${trackingToken}\nEmail Terdaftar: ${form.email || userEmail || '-'}\nLacak status & unduh dokumen: https://ppid.pareparekota.go.id/cek-status`;
+
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 flex flex-col">
         <Navbar />
-        <main className="flex-grow flex items-center justify-center p-4">
+        <main className="flex-grow flex items-center justify-center p-4 py-12">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-slate-900 rounded-3xl p-8 md:p-12 border border-slate-200 dark:border-slate-800 shadow-xl max-w-lg w-full text-center"
+            className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-10 border border-slate-200 dark:border-slate-800 shadow-xl max-w-2xl w-full"
           >
-            <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-10 h-10" />
+            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xs">
+              <CheckCircle2 className="w-9 h-9" />
             </div>
-            <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white mb-4">Permohonan Berhasil Dikirim!</h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-              Terima kasih. Permohonan informasi Anda telah kami terima dengan nomor tiket pengajuan <strong className="text-emerald-600 dark:text-emerald-400">{ticketId}</strong>. Kami akan memproses permohonan Anda dalam waktu maksimal 10 hari kerja.
-            </p>
-            <button 
-              onClick={() => setIsSuccess(false)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl transition-colors w-full"
-            >
-              Ajukan Permohonan Lain
-            </button>
+
+            <div className="text-center mb-6">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white">
+                Permohonan Berhasil Dikirim!
+              </h2>
+              <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-2 max-w-lg mx-auto">
+                Permohonan informasi publik Anda telah terdaftar secara resmi di sistem PPID Kementerian Agama Kota Parepare.
+              </p>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              {/* Box Nomor Permohonan */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                    Nomor Registrasi Permohonan
+                  </span>
+                  <span className="font-mono text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 select-all">
+                    {ticketId}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(ticketId, 'ticket')}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 transition-colors shadow-xs cursor-pointer"
+                >
+                  {copiedField === 'ticket' ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-emerald-600 dark:text-emerald-400">Tersalin!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Salin Nomor</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Box Token Pelacakan */}
+              {trackingToken && (
+                <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                        Kode Rahasia Pelacakan (Token)
+                      </span>
+                    </div>
+                    <span className="font-mono text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200 select-all break-all block">
+                      {trackingToken}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(trackingToken, 'token')}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-xs shrink-0 cursor-pointer"
+                  >
+                    {copiedField === 'token' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Tersalin!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Salin Kode</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Catatan Penting Keamanan */}
+            <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 mb-8 text-left">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className="text-xs leading-relaxed text-amber-800 dark:text-amber-300 space-y-1">
+                  <p className="font-bold">Penting: Segera Simpan Kredensial Ini</p>
+                  <p>
+                    Kode rahasia pelacakan hanya ditampilkan <strong>satu kali ini saja</strong> demi privasi dan keamanan data Anda. Mohon segera salin atau catat. Anda akan membutuhkannya bersama <strong>Nomor Registrasi Permohonan</strong> dan <strong>Email Pemohon</strong> untuk melihat status permohonan dan mengunduh tanggapan resmi di halaman Cek Status.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => copyToClipboard(fullSummaryText, 'all')}
+                className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold transition-colors cursor-pointer"
+              >
+                {copiedField === 'all' ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-600" />
+                    <span className="text-emerald-600">Semua Tersalin!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 text-slate-500" />
+                    <span>Salin Semua Info</span>
+                  </>
+                )}
+              </button>
+
+              <Link
+                href="/cek-status"
+                className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+              >
+                <span>Lacak Status</span>
+                <ExternalLink className="w-4 h-4" />
+              </Link>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+              <button 
+                type="button"
+                onClick={() => {
+                  setIsSuccess(false);
+                  setTicketId('');
+                  setTrackingToken('');
+                }}
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 underline font-medium transition-colors cursor-pointer"
+              >
+                Ajukan Permohonan Informasi Lain
+              </button>
+            </div>
           </motion.div>
         </main>
         <Footer />
@@ -182,6 +368,41 @@ export default function AjukanPermohonanPage() {
             </div>
             <h3 className="text-2xl font-bold text-slate-800 dark:text-white">Formulir Permohonan</h3>
           </div>
+
+          {/* Public Open Registration Banner */}
+          <div className="mb-6 p-4 bg-emerald-50/80 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-emerald-900 dark:text-emerald-300">
+              <p className="font-bold text-sm">Layanan Permohonan Informasi Publik Terbuka</p>
+              <p className="mt-1 leading-relaxed">Silakan lengkapi formulir permohonan dan lampirkan kartu identitas yang sah di bawah ini. Anda akan langsung menerima <strong>Nomor Registrasi Permohonan</strong> dan <strong>Kode Rahasia Pelacakan</strong> untuk memantau status serta mengunduh dokumen jawaban resmi di halaman Cek Status.</p>
+            </div>
+          </div>
+
+          {/* Submission Error Alert */}
+          {submitError && (
+            <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60 rounded-2xl flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                <div className="text-xs text-rose-800 dark:text-rose-200 space-y-1">
+                  <p className="font-bold text-sm">
+                    {submitError.code === 'EMAIL_NOT_VERIFIED'
+                      ? 'Format Email Tidak Valid'
+                      : submitError.code === 'FORBIDDEN'
+                      ? 'Akses Ditolak'
+                      : 'Gagal Mengirim Permohonan'}
+                  </p>
+                  <p>{submitError.message}</p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setSubmitError(null)}
+                className="p-1 text-rose-400 hover:text-rose-600 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             

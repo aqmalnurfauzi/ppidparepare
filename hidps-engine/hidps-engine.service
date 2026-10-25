@@ -1,0 +1,30 @@
+[Unit]
+Description=PPID Parepare - Host Intrusion Detection & Prevention System (HIDPS)
+After=network.target nginx.service
+Wants=nginx.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/ppidparepare/hidps-engine
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=-/etc/default/ppid-hidps
+
+# ExecStart runs monitor in continuous tail mode
+ExecStart=/usr/bin/python3 /var/www/ppidparepare/hidps-engine/monitor.py --tail
+
+# Graceful restart and termination
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+# Security and Sandbox Constraints
+ProtectSystem=full
+ProtectHome=true
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

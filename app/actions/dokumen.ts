@@ -11,13 +11,15 @@ import {
   getDokumenSignedUrl,
   listDokumenPermohonan,
   getPermohonanDokumenQuotaStatus,
+  PRIVATE_STORAGE_BUCKET,
 } from '@/lib/storage/documents';
 import {
   type DokumenDTO,
   type DokumenSignedUrlDTO,
   type DokumenQuotaStatusDTO,
 } from '@/types/dokumen';
-import { type DocumentCategory } from '@/lib/storage/validation';
+import { type DocumentCategory, validateDocumentFile } from '@/lib/storage/validation';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export type DokumenActionErrorCode =
   | 'VALIDATION_ERROR'
@@ -333,6 +335,115 @@ export async function getDokumenQuotaStatusAction(
     return {
       success: false,
       error: mapDokumenError(err),
+    };
+  }
+}
+
+export type UploadKtpResult = {
+  success: boolean;
+  storagePath?: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+};
+
+/**
+ * Server Action: Secure Citizen KTP Upload for Information Requests
+ *
+ * Security Enforcements:
+ * 1. Checks file presence and size (max 2 MB for citizen identity cards).
+ * 2. Magic-byte verification (strictly image/jpeg, image/png, application/pdf).
+ * 3. Stores strictly in private bucket 'permohonan-dokumen'.
+ * 4. Generates unguessable UUID storage path: identitas/{uuid}.{ext}.
+ * 5. Returns storage path only (NEVER generates public URL).
+ */
+export async function uploadKtpPermohonanAction(
+  formData: FormData
+): Promise<UploadKtpResult> {
+  try {
+    const file = formData.get('file') as File | null;
+    if (!file) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Berkas KTP wajib diunggah.',
+        },
+      };
+    }
+
+    // Size limit: 2MB (2 * 1024 * 1024 bytes)
+    const MAX_KTP_SIZE = 2 * 1024 * 1024;
+    if (file.size > MAX_KTP_SIZE) {
+      return {
+        success: false,
+        error: {
+          code: 'FILE_TOO_LARGE',
+          message: 'Ukuran berkas KTP melebihi batas maksimal 2 MB.',
+        },
+      };
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const fileBuffer = new Uint8Array(arrayBuffer);
+
+    // Magic-byte inspection
+    const validation = validateDocumentFile({
+      buffer: fileBuffer,
+      originalFilename: file.name,
+      declaredMimeType: file.type,
+    });
+
+    if (!validation.valid || !validation.detectedMime) {
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_FILE_TYPE',
+          message: `Validasi berkas gagal: ${validation.error || 'Format berkas tidak valid.'}`,
+        },
+      };
+    }
+
+    const extMap: Record<string, string> = {
+      'application/pdf': 'pdf',
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+    };
+    const fileExt = extMap[validation.detectedMime] || 'bin';
+    const storagePath = `identitas/${crypto.randomUUID()}.${fileExt}`;
+
+    const adminClient = createAdminClient();
+    const { error: uploadError } = await adminClient.storage
+      .from(PRIVATE_STORAGE_BUCKET)
+      .upload(storagePath, fileBuffer, {
+        contentType: validation.detectedMime,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('[STORAGE ERROR] Failed to upload KTP to private bucket:', uploadError.message);
+      return {
+        success: false,
+        error: {
+          code: 'STORAGE_ERROR',
+          message: 'Gagal mengunggah berkas identitas ke penyimpanan aman.',
+        },
+      };
+    }
+
+    return {
+      success: true,
+      storagePath,
+    };
+  } catch (err: unknown) {
+    console.error('[SERVER ACTION ERROR] uploadKtpPermohonanAction failed:', err);
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Terjadi kesalahan sistem saat memproses berkas KTP.',
+      },
     };
   }
 }

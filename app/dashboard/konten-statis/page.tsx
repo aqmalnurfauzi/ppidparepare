@@ -132,11 +132,11 @@ export default function ManajemenKontenStatis() {
         setIsSaved(true);
         setTimeout(() => setIsSaved(false), 3500);
       } else {
-        alert('Gagal menyimpan perubahan. Pastikan script SQL pembaruan RLS telah dijalankan di database Supabase.');
+        alert('Gagal menyimpan perubahan. Silakan periksa koneksi atau sesi admin.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Terjadi kesalahan saat menyimpan data.');
+      alert(err?.message || 'Terjadi kesalahan saat menyimpan data.');
     } finally {
       setIsSaving(false);
     }
@@ -227,7 +227,7 @@ export default function ManajemenKontenStatis() {
       setFaqs(updated);
       setIsFaqModalOpen(false);
     } else {
-      alert('Gagal menyimpan FAQ. Pastikan query SQL database telah diperbarui.');
+      alert(res?.error || 'Gagal menyimpan FAQ. Silakan periksa kembali isian form atau sesi admin.');
     }
     setIsSavingFaq(false);
   };
@@ -237,6 +237,8 @@ export default function ManajemenKontenStatis() {
     const res = await deleteFaq(id);
     if (res.success) {
       setFaqs(prev => prev.filter(f => f.id !== id));
+    } else {
+      alert(res?.error || 'Gagal menghapus FAQ.');
     }
   };
 

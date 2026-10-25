@@ -20,6 +20,10 @@ export default function InformasiPage() {
   const [modalMode, setModalMode] = useState<'add'|'edit'>('add');
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<any | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Upload Doc State
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
@@ -71,20 +75,26 @@ export default function InformasiPage() {
     return filtered;
   }, [dataInformasiPublik, searchQuery, kategoriFilter]);
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus dokumen ini?')) {
-      const res = await deleteInformasiPublik(id);
-      if (res.success) {
-        setDataInformasiPublik(prev => prev.filter(item => item.id !== id));
-      } else {
-        alert('Gagal menghapus dokumen.');
-      }
+  const executeDelete = async () => {
+    if (!deleteConfirmItem) return;
+    setIsDeleting(true);
+    setActionFeedback(null);
+    const res = await deleteInformasiPublik(deleteConfirmItem.id);
+    if (res.success) {
+      setDataInformasiPublik(prev => prev.filter(item => item.id !== deleteConfirmItem.id));
+      setActionFeedback({ type: 'success', message: 'Dokumen informasi publik berhasil dihapus.' });
+      setDeleteConfirmItem(null);
+    } else {
+      setActionFeedback({ type: 'error', message: res.error || 'Gagal menghapus dokumen.' });
+      setDeleteConfirmItem(null);
     }
+    setIsDeleting(false);
   };
 
   const handleOpenModal = (mode: 'add'|'edit', item: any = null) => {
     setModalMode(mode);
     setDocUploadNote(null);
+    setFormError(null);
     if (mode === 'edit' && item) {
       setSelectedItem(item);
       setFormData({
@@ -118,7 +128,7 @@ export default function InformasiPage() {
     if (!file) return;
 
     if (file.size > 25 * 1024 * 1024) {
-      alert('Ukuran file maksimal 25 MB.');
+      setDocUploadNote('Error: Ukuran file melebihi batas maksimal 25 MB.');
       return;
     }
 
@@ -148,9 +158,10 @@ export default function InformasiPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.judul.trim()) {
-      alert('Judul dokumen tidak boleh kosong.');
+      setFormError('Judul dokumen tidak boleh kosong.');
       return;
     }
+    setFormError(null);
     setIsSaving(true);
     
     const docId = modalMode === 'add' ? `INF-${Date.now().toString().slice(-6)}` : selectedItem.id;
@@ -172,16 +183,18 @@ export default function InformasiPage() {
       if (res.success) {
         await loadData();
         setIsModalOpen(false);
+        setActionFeedback({ type: 'success', message: 'Dokumen informasi publik berhasil ditambahkan.' });
       } else {
-        alert('Gagal menambah dokumen: ' + (res.error || 'Pastikan query SQL telah dijalankan di database.'));
+        setFormError(res.error || 'Gagal menambah dokumen.');
       }
     } else {
       const res = await updateInformasiPublik(selectedItem.id, dataToSave);
       if (res.success) {
         await loadData();
         setIsModalOpen(false);
+        setActionFeedback({ type: 'success', message: 'Dokumen informasi publik berhasil diperbarui.' });
       } else {
-        alert('Gagal mengubah dokumen: ' + (res.error || 'Pastikan query SQL telah dijalankan di database.'));
+        setFormError(res.error || 'Gagal mengubah dokumen.');
       }
     }
     setIsSaving(false);
@@ -204,6 +217,21 @@ export default function InformasiPage() {
           <span>Tambah Dokumen</span>
         </button>
       </div>
+
+      {actionFeedback && (
+        <div className={`p-4 rounded-xl flex items-center gap-3 border ${
+          actionFeedback.type === 'success'
+            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+            : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+        }`}>
+          {actionFeedback.type === 'success' ? (
+            <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+          ) : (
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+          )}
+          <p className="text-sm font-medium">{actionFeedback.message}</p>
+        </div>
+      )}
 
       {/* Filter/Search Bar */}
       <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
@@ -300,7 +328,7 @@ export default function InformasiPage() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button 
-                          onClick={() => handleDelete(item.id)}
+                          onClick={() => setDeleteConfirmItem(item)}
                           className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -332,6 +360,12 @@ export default function InformasiPage() {
               </button>
             </div>
             <div className="p-4 overflow-y-auto flex-1">
+              {formError && (
+                <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-center gap-2 text-rose-800 dark:text-rose-300 text-sm">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{formError}</span>
+                </div>
+              )}
               <form id="docForm" onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Judul Dokumen</label>
@@ -461,6 +495,45 @@ export default function InformasiPage() {
               >
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 <span>{isSaving ? 'Menyimpan...' : 'Simpan'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus Dokumen */}
+      {deleteConfirmItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/40 rounded-xl">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Konfirmasi Hapus</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Tindakan ini tidak dapat dibatalkan</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              Apakah Anda yakin ingin menghapus dokumen <strong className="text-slate-900 dark:text-white">&quot;{deleteConfirmItem.judul}&quot;</strong>?
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button 
+                type="button"
+                onClick={() => setDeleteConfirmItem(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl font-medium transition-colors text-sm"
+              >
+                Batal
+              </button>
+              <button 
+                type="button"
+                onClick={executeDelete}
+                disabled={isDeleting}
+                className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-medium transition-colors text-sm disabled:opacity-70"
+              >
+                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                <span>{isDeleting ? 'Menghapus...' : 'Ya, Hapus'}</span>
               </button>
             </div>
           </div>

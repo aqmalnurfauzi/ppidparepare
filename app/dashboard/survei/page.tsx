@@ -142,7 +142,7 @@ export default function SurveiKepuasanAdminPage() {
         setIsModalOpen(false);
       }
     } else {
-      alert('Gagal menghapus data survei');
+      alert(res?.error || 'Gagal menghapus data survei');
     }
     setIsDeleting(null);
   };

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FileDown, Calendar, BarChart3, PieChart, Filter, Loader2 } from 'lucide-react';
+import { FileDown, Calendar, BarChart3, PieChart, Filter, Loader2, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import { getLaporanData, getPermohonan } from '@/lib/actions';
 import { motion } from 'framer-motion';
 
@@ -9,6 +9,7 @@ export default function LaporanPage() {
   const [periode, setPeriode] = useState('tahunan');
   const [tahun, setTahun] = useState('2024');
   const [isExporting, setIsExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const [statsData, setStatsData] = useState({ 
     monthly: [] as number[], 
@@ -38,11 +39,12 @@ export default function LaporanPage() {
 
   const handleExport = async () => {
     setIsExporting(true);
+    setExportStatus(null);
     try {
       const data = await getLaporanData(periode, tahun);
       
       if (data.length === 0) {
-        alert('Tidak ada data untuk periode ini.');
+        setExportStatus({ type: 'info', message: `Tidak ada data permohonan untuk periode ${periode} tahun ${tahun}.` });
         setIsExporting(false);
         return;
       }
@@ -68,8 +70,9 @@ export default function LaporanPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setExportStatus({ type: 'success', message: `Laporan permohonan tahun ${tahun} (${data.length} baris) berhasil diekspor!` });
     } catch (e) {
-      alert('Gagal mengunduh laporan');
+      setExportStatus({ type: 'error', message: 'Gagal mengunduh laporan. Pastikan Anda memiliki hak akses administrator.' });
     }
     setIsExporting(false);
   };
@@ -137,6 +140,25 @@ export default function LaporanPage() {
             </button>
           </div>
         </div>
+
+        {exportStatus && (
+          <div className={`mt-6 p-4 rounded-xl flex items-center gap-3 border ${
+            exportStatus.type === 'success' 
+              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+              : exportStatus.type === 'info'
+              ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300'
+              : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+          }`}>
+            {exportStatus.type === 'success' ? (
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            ) : exportStatus.type === 'info' ? (
+              <Info className="w-5 h-5 text-blue-600 shrink-0" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+            )}
+            <p className="text-sm font-medium">{exportStatus.message}</p>
+          </div>
+        )}
       </div>
 
       {/* Analytics Preview Cards */}

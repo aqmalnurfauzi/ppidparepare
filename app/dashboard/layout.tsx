@@ -30,6 +30,7 @@ function AdminSidebar() {
     { name: 'Pengguna', href: '/dashboard/pengguna', icon: Users },
     { name: 'Laporan', href: '/dashboard/laporan', icon: BarChart },
     { name: 'Log Aktivitas', href: '/dashboard/log', icon: History },
+    { name: 'Keamanan HIDPS', href: '/dashboard/security-hidps', icon: ShieldAlert },
     { name: 'Konten Statis', href: '/dashboard/konten-statis', icon: FileText },
     { name: 'Notifikasi & Email', href: '/dashboard/notifikasi', icon: Settings },
     { name: 'Pengaturan Umum', href: '/dashboard/pengaturan', icon: Settings },
