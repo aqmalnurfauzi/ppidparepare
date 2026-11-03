@@ -1,10 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 
+/* =========================================================
+   TIPE DATA
+   ========================================================= */
 interface LayananDetail {
   kodeLayanan: string;
   nama: string;
@@ -23,6 +26,9 @@ interface KelompokLayananPemerintah {
   layanan: LayananDetail[];
 }
 
+/* =========================================================
+   DATA LAYANAN
+   ========================================================= */
 const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
   {
     huruf: 'A',
@@ -39,15 +45,15 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         labelFormulir: 'Formulir Usul KP',
         urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLSdXgnO2XkjtP7b7pbjxxjLITXDVFC7Bv-PUOt4HyiqdCXCXLA/viewform'
       },
-       {
+      {
         kodeLayanan: 'A.2',
         nama: 'Usul Kenaikan Jenjang Jabatan Fungsional',
         sasaran: 'PNS',
         deskripsi: 'Pengajuan kenaikan jenjang jabatan bagi Pejabat Fungsional di lingkungan Kementerian Agama Kota Parepare yang telah memenuhi Angka Kredit (AK) yang disyaratkan dan lulus Uji Kompetensi.',
         labelPanduan: 'Format Berkas & Syarat (PDF)',
         urlPanduan: 'https://drive.google.com/file/d/14i_gQmsER59yZ9b-4bUeAiOysogXJkdE/view?usp=sharing',
-        labelFormulir: 'Formulir Usul Gelar',
-        urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLSf3Kg0Y2GBxevEagh8YMsYzqam1G1bjAy1uTLWWPV4X1G_IlA/closedform'
+        labelFormulir: 'Formulir Kenaikan Jenjang',
+        urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLSf3Kg0Y2GBxevEagh8YMsYzqam1G1bjAy1uTLWWPV4X1G_IlA/viewform'
       },
       {
         kodeLayanan: 'A.3',
@@ -157,7 +163,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLScqLgMjEn2i-ngU20YDlHUXNP9DPh1CdTFa-mK8YWYHb1AkQw/viewform?usp=dialog'
       },
       {
-         kodeLayanan: 'B.2',
+        kodeLayanan: 'B.2',
         nama: 'Format Permohonan Surat Cuti (PPPK & PNS)',
         sasaran: 'PNS & PPPK',
         deskripsi: 'Formulir resmi permohonan izin cuti (Tahunan, Sakit, Alasan Penting, Melahirkan, dan Besar) sesuai Peraturan BKN No. 24/2017 & No. 7/2021.',
@@ -211,7 +217,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         labelFormulir: 'Registrasi Jadwal Konsultasi',
         urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
       },
-       {
+      {
         kodeLayanan: 'C.5',
         nama: 'Perbaikan Data ASN',
         sasaran: 'Seluruh ASN',
@@ -240,222 +246,386 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         urlPanduan: 'https://drive.google.com/file/d/1m-KuDE1Df8Eq-SGkPamt4aDPO6brFy-K/view?usp=sharing',
         labelFormulir: 'Formulir Bantuan Lainnya',
         urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
-      }   
+      }
     ]
   }
 ];
 
+/* =========================================================
+   KONSTANTA, HELPER, IKON
+   ========================================================= */
+type Peran = 'Semua' | 'PNS' | 'PPPK' | 'Masyarakat';
+
+const DAFTAR_PERAN: { nilai: Peran; label: string }[] = [
+  { nilai: 'Semua', label: 'Semua' },
+  { nilai: 'PNS', label: 'PNS' },
+  { nilai: 'PPPK', label: 'PPPK' },
+  { nilai: 'Masyarakat', label: 'Masyarakat Umum' },
+];
+
+const LANGKAH = [
+  { no: 1, judul: 'Baca panduan', teks: 'Unduh panduan dan siapkan syarat berkas.' },
+  { no: 2, judul: 'Siapkan dokumen', teks: 'Scan dokumen asli yang telah ditandatangani atasan.' },
+  { no: 3, judul: 'Kirim daring', teks: 'Isi formulir dan unggah berkas. Tanpa biaya.' },
+];
+
+const TICKER = [
+  'Dimanapun',
+  'Pengajuan Online 24 Jam',
+  'Gadget Apapun',
+  'Pelayanan Terpadu Satu Pintu',
+  'Bebas Biaya',
+  'Online',
+];
+
+function cocokPeran(sasaran: LayananDetail['sasaran'], peran: Peran) {
+  if (peran === 'Semua') return true;
+  if (peran === 'Masyarakat') return sasaran === 'Seluruh Masyarakat';
+  if (sasaran === 'Seluruh ASN') return true;
+  return sasaran.includes(peran);
+}
+
+const formulirDitutup = (url?: string) => !!url && url.includes('closedform');
+
+const IconCari = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
+  </svg>
+);
+const IconBerkas = () => (
+  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+const IconPanah = () => (
+  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14m-6-6l6 6-6 6" />
+  </svg>
+);
+
+/* CSS untuk teks berjalan (berhenti saat di-hover, mati jika pengguna
+   memilih "kurangi animasi" di perangkatnya) */
+const TICKER_CSS = `
+  @keyframes simpel-ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .simpel-ticker-track { display: flex; width: max-content; animation: simpel-ticker 35s linear infinite; }
+  .simpel-ticker-wrap:hover .simpel-ticker-track { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .simpel-ticker-track { animation: none; } }
+`;
+
+/* =========================================================
+   HALAMAN
+   ========================================================= */
 export default function SIMPELSDMPage() {
+  const [kata, setKata] = useState('');
+  const [peran, setPeran] = useState<Peran>('Semua');
+  const [kelompokAktif, setKelompokAktif] = useState<string>('Semua');
+
+  const totalLayanan = useMemo(
+    () => DATA_LAYANAN_KEMENAG.reduce((n, k) => n + k.layanan.length, 0),
+    []
+  );
+
+  const hasil = useMemo(() => {
+    const q = kata.trim().toLowerCase();
+    return DATA_LAYANAN_KEMENAG
+      .filter((k) => kelompokAktif === 'Semua' || k.huruf === kelompokAktif)
+      .map((k) => ({
+        ...k,
+        layanan: k.layanan.filter(
+          (l) =>
+            cocokPeran(l.sasaran, peran) &&
+            (!q ||
+              l.nama.toLowerCase().includes(q) ||
+              l.deskripsi.toLowerCase().includes(q) ||
+              l.kodeLayanan.toLowerCase().includes(q))
+        ),
+      }))
+      .filter((k) => k.layanan.length > 0);
+  }, [kata, peran, kelompokAktif]);
+
+  const jumlahHasil = hasil.reduce((n, k) => n + k.layanan.length, 0);
+
+  /* chip di area gelap (hero) */
+  const chipHero = (aktif: boolean) =>
+    `px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#fdd847] ${
+      aktif
+        ? 'bg-[#fdd847] border-[#fdd847] text-slate-900'
+        : 'bg-white/10 border-white/30 text-white hover:bg-white/20'
+    }`;
+
+  /* chip di area terang (tab kelompok) */
+  const chip = (aktif: boolean) =>
+    `px-3.5 py-1.5 rounded-full text-sm font-medium border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0b6e66] ${
+      aktif
+        ? 'bg-[#0b6e66] border-[#0b6e66] text-white'
+        : 'bg-white border-slate-300 text-slate-700 hover:border-[#0b6e66] hover:text-[#0b6e66] dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-teal-400 dark:hover:text-teal-300'
+    }`;
+
+  const tombolUtama =
+    'bg-[#0b6e66] hover:bg-[#095a54] text-white dark:bg-teal-600 dark:hover:bg-teal-500';
+
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans flex flex-col justify-between selection:bg-[#005a2b] selection:text-white transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-[#f3f3f3] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans selection:bg-[#0b6e66] selection:text-white transition-colors duration-200">
+      <style>{TICKER_CSS}</style>
       <Navbar />
 
       <div className="flex-1">
-       <header className="bg-gradient-to-r from-[#004d25] via-[#005a2b] to-[#046a38] dark:from-[#002e16] dark:via-[#00381b] dark:to-[#024021] text-white shadow-md border-b-2 border-emerald-800 dark:border-emerald-950">
-          {/* Baris Identitas Satker */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 border-b border-emerald-700/50 dark:border-emerald-900/60 flex flex-wrap items-center justify-between text-xs text-emerald-100 dark:text-emerald-200 gap-2">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-white tracking-wider uppercase">
-                Kementerian Agama Republik Indonesia
+        {/* ============ HERO ============ */}
+        <header className="relative overflow-hidden text-white bg-gradient-to-br from-[#4d7a87] via-[#3d6674] to-[#2d5260] dark:from-[#233f49] dark:via-[#1d3640] dark:to-[#162b33]">
+          {/*
+            OPSIONAL: untuk memakai foto latar seperti contoh, taruh gambar di
+            /public/images/hero-simpel.jpg lalu aktifkan elemen di bawah ini.
+
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-cover bg-center opacity-30"
+              style={{ backgroundImage: "url('/images/hero-simpel.jpg')" }}
+            />
+          */}
+
+          {/* Hiasan: cincin besar seperti kaca pembesar pada contoh */}
+          <div aria-hidden className="pointer-events-none absolute -left-28 -top-24 h-[26rem] w-[26rem] rounded-full border-[18px] border-slate-900/20" />
+          <div aria-hidden className="pointer-events-none absolute -left-10 top-0 h-[18rem] w-[18rem] rounded-full bg-white/5" />
+          <div aria-hidden className="pointer-events-none absolute -right-24 -bottom-32 h-80 w-80 rounded-full bg-black/10" />
+
+          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 text-center">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white drop-shadow-sm">
+              SIMPEL SDM
+            </h1>
+
+            <p className="mt-3 text-sm sm:text-base font-semibold text-white/90 max-w-2xl mx-auto leading-relaxed">
+              Sistem Pelayanan Informasi Manajemen Pelayanan Sumber Daya Manusia
+            </p>
+
+            <span className="mt-5 inline-block max-w-full px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium text-slate-900 bg-[#fde6dd] border border-[#f08a6b]">
+              Layanan Kenaikan Pangkat, Pensiun, Cuti, Kinerja, dan Administrasi Kepegawaian
+            </span>
+
+            <p className="mt-4 text-xs sm:text-sm font-medium uppercase tracking-wide text-white/90">
+              Subbagian Tata Usaha | Kementrian Agama Kota Parepare
+            </p>
+
+            {/* Pencarian */}
+            <div className="mt-8 relative max-w-2xl mx-auto text-left">
+              <span className="absolute inset-y-0 left-5 flex items-center text-slate-400 pointer-events-none">
+                <IconCari />
               </span>
-              <span className="text-emerald-400">|</span>
-              <span className="text-emerald-100 dark:text-emerald-200">Kantor Kota Parepare</span>
+              <input
+                type="search"
+                value={kata}
+                onChange={(e) => setKata(e.target.value)}
+                placeholder="Cari layanan, mis. kenaikan pangkat, pensiun, cuti…"
+                aria-label="Cari layanan"
+                className="w-full py-3.5 pl-12 pr-5 rounded-full bg-white text-slate-900 border border-transparent text-base placeholder:text-slate-400 shadow-lg shadow-black/10 focus:outline-none focus:ring-4 focus:ring-[#fdd847]/50 transition"
+              />
             </div>
-            <div className="flex items-center gap-4 text-[11px] text-emerald-200">
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
-                Subbagian Tata Usaha
-              </span>
-              <span>Jam Layanan: 08.00 - 15.00 WITA</span>
-            </div>
-          </div>
 
-          {/* Banner Judul Resmi */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
-            <nav className="flex items-center gap-2 text-xs text-emerald-200 mb-4" aria-label="Breadcrumb">
-              <Link href="/" className="hover:text-white transition-colors">
-                Beranda
-              </Link>
-              <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
-              <span className="text-white font-medium">SIMPEL SDM</span>
-            </nav>
-
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div>
-                <span className="inline-block px-3 py-1 text-[11px] font-bold tracking-wider uppercase rounded-full bg-emerald-950/70 border border-emerald-400/30 text-emerald-200 mb-3">
-                  Sistem Pelayanan Informasi Manajemen Pelayanan Sumber Daya Manusia
-                </span>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-                  Katalog Layanan Manajemen Kepegawaian
-                </h1>
-                <p className="mt-3 text-sm text-emerald-50 max-w-3xl leading-relaxed">
-                  Pintu pelayanan digital terpadu untuk pengusulan kenaikan pangkat, ijazah, perizinan cuti, pelaporan kinerja bulanan, dan administrasi aparatur sipil negara di lingkungan Kantor Kementerian Agama Kota Parepare.
-                </p>
-              </div>
-
-              {/* Box Info Bebas Biaya */}
-              <div className="shrink-0 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-4 text-xs max-w-xs shadow-lg transition-colors">
-                <div className="font-bold text-[#005a2b] dark:text-emerald-400 flex items-center gap-1.5 mb-1.5 text-[12px]">
-                  <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  Maklumat Pelayanan Publik
-                </div>
-                <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11.5px]">
-                  Seluruh pengurusan berkas kepegawaian dilaksanakan secara transparan dan <strong className="text-slate-900 dark:text-white font-semibold">Bebas Biaya (Rp0 / Tanpa Pungli)</strong>.
-                </p>
-              </div>
+            {/* Peran */}
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+              <span className="text-sm text-white/80 mr-1">Saya adalah:</span>
+              {DAFTAR_PERAN.map((p) => (
+                <button
+                  key={p.nilai}
+                  type="button"
+                  onClick={() => setPeran(p.nilai)}
+                  aria-pressed={peran === p.nilai}
+                  className={chipHero(peran === p.nilai)}
+                >
+                  {p.label}
+                </button>
+              ))}
             </div>
           </div>
         </header>
 
-        <section className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-6 transition-colors">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-slate-700 dark:text-slate-200">
-              <div className="flex items-start gap-3 p-3.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 transition-colors">
-                <span className="w-6 h-6 rounded-full bg-[#005a2b] dark:bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                  1
-                </span>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Pelajari Syarat Panduan</h4>
-                  <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Unduh file PDF panduan dan format berkas resmi melalui tombol Google Drive.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-3.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 transition-colors">
-                <span className="w-6 h-6 rounded-full bg-[#005a2b] dark:bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                  2
-                </span>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Lengkapi Dokumen Valid</h4>
-                  <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Siapkan dokumen scan asli bertandatangan atasan (Kamad / Kepala KUA / Kasi).
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-3.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 transition-colors">
-                <span className="w-6 h-6 rounded-full bg-[#005a2b] dark:bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                  3
-                </span>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Kirim Berkas Daring</h4>
-                  <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Isi data dan unggah berkas melalui Google Form resmi Subbag TU Kemenag Parepare.
-                  </p>
-                </div>
-              </div>
-            </div>
+        {/* ============ PITA TEKS BERJALAN ============ */}
+        <div
+          className="simpel-ticker-wrap overflow-hidden bg-[#0b6e66] dark:bg-[#0a524c] text-white"
+          role="marquee"
+          aria-label="Keunggulan layanan"
+        >
+          <div className="simpel-ticker-track py-3.5">
+            {[0, 1].map((salinan) => (
+              <ul key={salinan} className="flex shrink-0 items-center gap-10 pr-10" aria-hidden={salinan === 1}>
+                {[...TICKER, ...TICKER].map((teks, i) => (
+                  <li key={`${salinan}-${i}`} className="flex items-center gap-2 text-sm font-semibold whitespace-nowrap">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#fdd847]" />
+                    {teks}
+                  </li>
+                ))}
+              </ul>
+            ))}
           </div>
+        </div>
+
+        {/* ============ ALUR 3 LANGKAH ============ */}
+        <section aria-label="Alur pengajuan" className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <ol className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5 grid gap-4 sm:grid-cols-3">
+            {LANGKAH.map((l) => (
+              <li key={l.no} className="flex items-start gap-3">
+                <span className="w-7 h-7 shrink-0 rounded-full bg-[#fdd847] text-slate-900 text-sm font-bold flex items-center justify-center">
+                  {l.no}
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{l.judul}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-snug">{l.teks}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </section>
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-          {DATA_LAYANAN_KEMENAG.map((kelompok) => (
-            <section key={kelompok.huruf} className="space-y-5">
-              <div className="border-b-2 border-slate-200 dark:border-slate-800 pb-3 flex items-baseline justify-between">
-                <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
-                    <span className="w-7 h-7 rounded bg-[#005a2b] dark:bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">
-                      {kelompok.huruf}
-                    </span>
-                    {kelompok.judul}
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 pl-9">
-                    {kelompok.subjudul}
-                  </p>
-                </div>
-                <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline">
-                  {kelompok.layanan.length} Layanan
-                </span>
+        {/* ============ KATALOG ============ */}
+        <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+          {/* Tab kelompok */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Kelompok layanan">
+              <button
+                type="button"
+                onClick={() => setKelompokAktif('Semua')}
+                aria-pressed={kelompokAktif === 'Semua'}
+                className={chip(kelompokAktif === 'Semua')}
+              >
+                Semua
+              </button>
+              {DATA_LAYANAN_KEMENAG.map((k) => (
+                <button
+                  key={k.huruf}
+                  type="button"
+                  onClick={() => setKelompokAktif(k.huruf)}
+                  aria-pressed={kelompokAktif === k.huruf}
+                  className={chip(kelompokAktif === k.huruf)}
+                  title={k.judul}
+                >
+                  {k.huruf} · {k.judul.replace('Layanan ', '')}
+                </button>
+              ))}
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400" aria-live="polite">
+              {jumlahHasil} dari {totalLayanan} layanan
+            </p>
+          </div>
+
+          {/* Kosong */}
+          {hasil.length === 0 && (
+            <div className="text-center py-16 px-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900">
+              <p className="font-semibold text-slate-800 dark:text-slate-100">Layanan tidak ditemukan</p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Coba kata kunci lain, atau pilih "Semua" pada filter.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setKata('');
+                  setPeran('Semua');
+                  setKelompokAktif('Semua');
+                }}
+                className={`mt-4 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${tombolUtama}`}
+              >
+                Reset pencarian
+              </button>
+            </div>
+          )}
+
+          {/* Daftar layanan */}
+          {hasil.map((kelompok) => (
+            <section key={kelompok.huruf} aria-labelledby={`kel-${kelompok.huruf}`}>
+              <div className="mb-4">
+                <h2 id={`kel-${kelompok.huruf}`} className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                  {kelompok.judul}
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{kelompok.subjudul}</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {kelompok.layanan.map((item) => (
-                  <article
-                    key={item.kodeLayanan}
-                    className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm hover:border-[#005a2b]/40 dark:hover:border-emerald-500/50 hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
-                  >
-                    <div className="p-5">
-                      <div className="flex items-center justify-between gap-2 mb-3">
-                        <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                          {item.kodeLayanan}
-                        </span>
-                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-full bg-slate-50 dark:bg-slate-800/70">
-                          Sasaran: {item.sasaran}
-                        </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {kelompok.layanan.map((item) => {
+                  const ditutup = formulirDitutup(item.urlFormulir);
+                  return (
+                    <article
+                      key={item.kodeLayanan}
+                      className="flex flex-col justify-between rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-[#0b6e66]/50 dark:hover:border-teal-500/50 hover:shadow-md transition"
+                    >
+                      <div className="p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-teal-50 text-[#0b6e66] dark:bg-teal-900/40 dark:text-teal-300">
+                            {item.kodeLayanan}
+                          </span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                            {item.sasaran}
+                          </span>
+                          {ditutup && (
+                            <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                              Formulir ditutup
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 leading-snug">
+                          {item.nama}
+                        </h3>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed text-left">
+                          {item.deskripsi}
+                        </p>
                       </div>
 
-                      <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug mb-2">
-                        {item.nama}
-                      </h3>
+                      <div className="px-5 pb-5 flex flex-col sm:flex-row gap-2">
+                        {item.urlFormulir &&
+                          (ditutup ? (
+                            <span
+                              aria-disabled
+                              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 cursor-not-allowed"
+                            >
+                              Belum dibuka
+                            </span>
+                          ) : (
+                            <a
+                              href={item.urlFormulir}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={item.labelFormulir}
+                              className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0b6e66] transition-colors ${tombolUtama}`}
+                            >
+                              Ajukan <IconPanah />
+                            </a>
+                          ))}
 
-                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed text-justify">
-                        {item.deskripsi}
-                      </p>
-                    </div>
-
-                    <div className={`p-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 ${item.urlFormulir ? 'grid grid-cols-2 gap-2' : 'flex'}`}>
-                      <a
-                        href={item.urlPanduan}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded text-xs font-semibold ${
-                          item.urlFormulir
-                            ? 'text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
-                            : 'w-full text-white bg-[#005a2b] dark:bg-emerald-600 hover:bg-[#074723] dark:hover:bg-emerald-500 shadow-xs'
-                        } transition-colors text-center`}
-                        title={item.labelPanduan}
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <span className="truncate">{item.labelPanduan}</span>
-                      </a>
-
-                      {item.urlFormulir && (
                         <a
-                          href={item.urlFormulir}
+                          href={item.urlPanduan}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded text-xs font-semibold text-white bg-[#005a2b] dark:bg-emerald-600 hover:bg-[#074723] dark:hover:bg-emerald-500 transition-colors shadow-2xs text-center"
-                          title={item.labelFormulir}
+                          title={item.labelPanduan}
+                          className={
+                            item.urlFormulir
+                              ? 'flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-[#0b6e66] dark:text-teal-300 border border-[#0b6e66]/30 dark:border-teal-500/40 hover:bg-teal-50 dark:hover:bg-teal-900/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0b6e66] transition-colors'
+                              : `flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0b6e66] transition-colors ${tombolUtama}`
+                          }
                         >
-                          <svg className="w-3.5 h-3.5 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                          <span className="truncate">{item.labelFormulir}</span>
+                          <IconBerkas />
+                          <span className="truncate">{item.urlFormulir ? 'Panduan' : item.labelPanduan}</span>
                         </a>
-                      )}
-                    </div>
-                  </article>
-                ))}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </section>
           ))}
 
-          <div className="bg-white dark:bg-slate-900 border-l-4 border-[#005a2b] dark:border-l-emerald-500 border-y border-r border-slate-200 dark:border-y-slate-800 dark:border-r-slate-800 rounded-r-lg p-5 sm:p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors">
-            <div className="space-y-1">
-              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <svg className="w-4 h-4 text-[#005a2b] dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Pusat Bantuan & Verifikasi Berkas Kepegawaian
-              </h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
-                Berkas usulan yang masuk melalui formulir daring akan diverifikasi secara berkala oleh Tim Analis Kepegawaian Subbagian Tata Usaha Kantor Kemenag Kota Parepare. Untuk konfirmasi kendala teknis atau status usulan mendesak, silakan hubungi Meja Layanan PTSP Kemenag Parepare pada hari dinas (Senin - Jumat).
+          {/* ============ BANTUAN ============ */}
+          <aside className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-l-4 border-l-[#fdd847] p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h4 className="font-semibold text-slate-900 dark:text-slate-100">Butuh bantuan atau cek status usulan?</h4>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
+                Berkas yang masuk diverifikasi secara berkala oleh Tim Analis Kepegawaian Subbagian Tata Usaha. Untuk kendala teknis atau usulan mendesak, hubungi Meja Layanan PTSP pada hari dinas (Senin–Jumat, 08.00–15.00 WITA).
               </p>
             </div>
             <Link
               href="/kontak"
-              className="px-4 py-2 bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-500 text-white rounded text-xs font-semibold tracking-wide transition-colors shrink-0"
+              className="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-slate-900 bg-[#fdd847] hover:bg-[#f3c928] transition-colors"
             >
-              Kontak Layanan
+              Hubungi Layanan <IconPanah />
             </Link>
-          </div>
+          </aside>
         </main>
       </div>
 
