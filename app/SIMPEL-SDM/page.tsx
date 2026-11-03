@@ -273,7 +273,8 @@ const TICKER = [
   'Dimanapun',
   'Pengajuan Online 24 Jam',
   'Gadget Apapun',
-  'Pelayanan Terpadu Satu Pintu',
+  'PPID',
+  'Kemenag Parepare',
   'Bebas Biaya',
   'Online',
 ];
