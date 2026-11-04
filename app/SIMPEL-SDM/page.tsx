@@ -5,9 +5,6 @@ import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 
-/* =========================================================
-   TIPE DATA
-   ========================================================= */
 interface LayananDetail {
   kodeLayanan: string;
   nama: string;
@@ -123,7 +120,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         labelPanduan: 'SOP & Syarat Mutasi (PDF)',
         urlPanduan: 'https://drive.google.com/file/d/1hEHxDh7ueXfciIPOvR7CHt2u8G-xoe-R/view?usp=sharing',
         labelFormulir: 'Formulir Usul Mutasi',
-        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6/closedform'
       },
       {
         kodeLayanan: 'A.10',
@@ -133,7 +130,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         labelPanduan: 'Dokumen Syarat Pengisian (PDF)',
         urlPanduan: 'https://drive.google.com/file/d/1hBDCFGFSOn6kK-Rlkxt2TVNdAovRrNKI/view?usp=sharing',
         labelFormulir: 'Formulir Usul Jabatan',
-        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6/closedform'
       },
       {
         kodeLayanan: 'A.11',
@@ -143,7 +140,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         labelPanduan: 'Format Berkas Inpassing (PDF)',
         urlPanduan: 'https://drive.google.com/file/d/1rBNoX0kGWc_1EmJb1NcxMp_GIrDv-xRk/view?usp=sharing',
         labelFormulir: 'Formulir Usul Inpassing',
-        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6/closedform'
       },
             {
         kodeLayanan: 'A.12',
@@ -153,7 +150,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         labelPanduan: 'Syarat & Format Berkas (PDF)',
         urlPanduan: 'GANTI_DENGAN_LINK_PDF_PANDUAN',
         labelFormulir: 'Formulir Usul Pemberhentian',
-        urlFormulir: 'GANTI_DENGAN_LINK_GOOGLE_FORM'
+        urlFormulir: 'GANTI_DENGAN_LINK_GOOGLE_FORM/closedform'
       }
     ]
   },
@@ -235,7 +232,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         labelPanduan: 'Daftar Bukti Dukung (PDF)',
         urlPanduan: 'https://drive.google.com/file/d/1uFUalk2-oBcyPpik7Ox1MVCdi-YXfZ1R/view?usp=sharing',
         labelFormulir: 'Formulir Perbaikan Data',
-        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6/closedform'
       },
       {
         kodeLayanan: 'C.6',
@@ -245,7 +242,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         labelPanduan: 'Panduan Kendala Simpeg5 (PDF)',
         urlPanduan: 'https://drive.google.com/file/d/1bNxNXymIdRnOwVmUlsw6q0L6kpWoK08G/view?usp=sharing',
         labelFormulir: 'Formulir Penyesuaian Simpeg5',
-        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6/closedform'
       },
       {
         kodeLayanan: 'C.7',
@@ -255,7 +252,7 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         labelPanduan: 'Ketentuan Layanan Umum (PDF)',
         urlPanduan: 'https://drive.google.com/file/d/1m-KuDE1Df8Eq-SGkPamt4aDPO6brFy-K/view?usp=sharing',
         labelFormulir: 'Formulir Bantuan Lainnya',
-        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+        urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6/closedform'
       },
             {
         kodeLayanan: 'C.8',
