@@ -11,7 +11,7 @@ import { Footer } from '@/components/Footer';
 interface LayananDetail {
   kodeLayanan: string;
   nama: string;
-  sasaran: 'PNS' | 'PNS & PPPK' | 'Seluruh ASN' | 'Seluruh Masyarakat';
+  sasaran: 'PNS' | 'PNS & PPPK' | 'PPPK' |'Seluruh ASN' | 'Seluruh Masyarakat';
   deskripsi: string;
   labelPanduan: string;
   urlPanduan: string;
@@ -144,6 +144,16 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         urlPanduan: 'https://drive.google.com/file/d/1rBNoX0kGWc_1EmJb1NcxMp_GIrDv-xRk/view?usp=sharing',
         labelFormulir: 'Formulir Usul Inpassing',
         urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+      },
+            {
+        kodeLayanan: 'A.12',
+        nama: 'Usul Pemberhentian PPPK',
+        sasaran: 'PPPK',
+        deskripsi: 'Pengajuan pemberhentian Pegawai Pemerintah dengan Perjanjian Kerja (PPPK), antara lain karena berakhirnya perjanjian kerja, permohonan sendiri, atau sebab lain sesuai ketentuan peraturan perundang-undangan.',
+        labelPanduan: 'Syarat & Format Berkas (PDF)',
+        urlPanduan: 'GANTI_DENGAN_LINK_PDF_PANDUAN',
+        labelFormulir: 'Formulir Usul Pemberhentian',
+        urlFormulir: 'GANTI_DENGAN_LINK_GOOGLE_FORM'
       }
     ]
   },
@@ -246,6 +256,16 @@ const DATA_LAYANAN_KEMENAG: KelompokLayananPemerintah[] = [
         urlPanduan: 'https://drive.google.com/file/d/1m-KuDE1Df8Eq-SGkPamt4aDPO6brFy-K/view?usp=sharing',
         labelFormulir: 'Formulir Bantuan Lainnya',
         urlFormulir: 'https://forms.gle/7pctp7yoxTeCKo5F6'
+      },
+            {
+        kodeLayanan: 'C.8',
+        nama: 'Laporan Penilaian Kinerja Periodik/Triwulan dan Tahunan 2026',
+        sasaran: 'Seluruh ASN',
+        deskripsi: 'Pelaporan Penilaian Kinerja Periodik/Triwulan dan Tahunan Tahun 2026 sebagai bagian dari monitoring dan evaluasi penyelesaian penilaian kinerja serta pengarsipan. Dilaporkan paling lambat 1 bulan setelah masa penilaian berakhir.',
+        labelPanduan: 'Ketentuan SKP (PDF)',
+        urlPanduan: 'https://drive.google.com/file/d/1m-KuDE1Df8Eq-SGkPamt4aDPO6brFy-K/view?usp=sharing',
+        labelFormulir: 'Unggah Dokumen Penilaian Kinerja',
+        urlFormulir: 'https://docs.google.com/forms/d/e/1FAIpQLSc2unuG3GaGFjbJ4q1jtu1cWgrFYFkVQxiaANfYdoiqlWbKiw/viewform'
       }
     ]
   }
